@@ -1,0 +1,21 @@
+{
+    "name": "juanangel123/pangya-server",
+    "description": "A Pangya Server built from the ground-up.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Juan Ángel Espigares Marín",
+            "email": "juanangel.espigares@imaginanet.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "react/socket": "^1.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pangya\\": "src/"
+        }
+    }
+}
