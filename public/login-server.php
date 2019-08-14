@@ -4,6 +4,8 @@
  * This is the Pangya Login Server.
  */
 
+use Pangya\Client;
+
 $host = '127.0.0.1';
 $port = '10103';
 
@@ -17,6 +19,9 @@ $socket = new React\Socket\Server($host.':'.$port, $loop);
 
 $socket->on('connection', function (React\Socket\ConnectionInterface $connection) {
     echo 'Client connected: '. $connection->getRemoteAddress() . "\n";
+
+    $client = new Client($connection);
+    $client->connect();
 
     $connection->on('data', function ($data) use ($connection) {
         echo 'Data: ' . $data;
