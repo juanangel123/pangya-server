@@ -3,6 +3,8 @@
 namespace Pangya;
 
 use Exception;
+use Nelexa\Buffer\BufferException;
+use Nelexa\Buffer\StringBuffer;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -18,16 +20,21 @@ class Client
     protected $connection;
 
     /**
-     * Byte.
+     * @var int Id of the connection.
+     */
+    protected $id = 0;
+
+    /**
+     * @var bool Flag to check if the client has been verified to send packets.
+     */
+    protected $verified;
+
+    /**
+     * Byte containing the key to the authentication process.
      *
      * @var string
      */
     protected $key;
-
-    /**
-     * @var int Id of the connection.
-     */
-    protected $id = 0;
 
     /**
      * Client constructor.
@@ -37,6 +44,16 @@ class Client
     public function __construct(ConnectionInterface $connection)
     {
         $this->connection = $connection;
+    }
+
+    /**
+     * Return the Client id.
+     *
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     /**
@@ -60,12 +77,26 @@ class Client
 
     /**
      * Send the key to the server.
+     *
+     * @throws BufferException
      */
     public function sendKey(): void
     {
-        // TODO: pangya buffer create.
         // TODO: this is not encrypted but we need to make something in the buffer to encrypt data.
-        // TODO: to check: the key is 6 byte length? (length + data)
-        $this->connection->write(pack('C*', ...[0, 11, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 117, 39, 0, 0]));
+        $buffer = new StringBuffer();
+        $buffer->insertArrayBytes([0x00, 0x0b, 0x00, 0x00, 0x00, 0x00]);
+        // TODO: to check: the key is 6 byte length (length + data).
+        $buffer->insertArrayBytes([6, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        $buffer->insertArrayBytes([0x75, 0x27, 0x00, 0x00]);
+
+        $this->connection->write($buffer->toString());
+    }
+
+    /**
+     * @param $buffer
+     */
+    public function processCommand($buffer)
+    {
+
     }
 }

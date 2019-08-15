@@ -4,7 +4,11 @@
  * This is the Pangya Login Server.
  */
 
+use Pangya\AuthClient;
 use Pangya\Client;
+use React\EventLoop\Factory;
+use React\Socket\ConnectionInterface;
+use React\Socket\Server;
 
 $host = '127.0.0.1';
 $port = '10103';
@@ -14,21 +18,47 @@ $port = '10103';
  */
 require __DIR__.'/../vendor/autoload.php';
 
-$loop = React\EventLoop\Factory::create();
-$socket = new React\Socket\Server($host.':'.$port, $loop);
+$loop = Factory::create();
+$socket = new Server($host.':'.$port, $loop);
 
-$socket->on('connection', function (React\Socket\ConnectionInterface $connection) {
-    echo 'Client connected: '. $connection->getRemoteAddress() . "\n";
+// TODO
+$authClient = new AuthClient();
+
+$socket->on('connection', static function (ConnectionInterface $connection) use ($authClient) {
+    echo 'Client connected: '.$connection->getRemoteAddress()."\n";
 
     $client = new Client($connection);
     $client->connect();
 
-    $connection->on('data', function ($data) use ($connection) {
-        echo 'Data: ' . $data;
-        //$connection->close();
+    $connection->on('data', static function (string $data) use ($authClient) {
+        $authClient->execute($data);
+    });
+    $connection->on('end', static function () use ($client) {
+        echo 'Client: '.$client->getId()." has end the connection\n";
+    });
+    $connection->on('error', static function (Exception $e) {
+        echo 'Error: '.$e->getMessage()."\n";
+    });
+    $connection->on('close', static function () use ($client) {
+        echo 'Client: '.$client->getId()." has disconnected\n";
     });
 });
 
+
+//try {
+//    $loop->addReadStream(fopen('php://stdin', 'rb'), static function ($stream) {
+//        $line = fgets($stream);
+//        if (!$line) {
+//            return;
+//        }
+//
+//        echo 'Input: '.$line;
+//    });
+//} catch (Exception $e) {
+//    echo "Can't get the stdin input stream\n";
+//}
+
+echo "Pangya Fresh UP! Login Server\n";
 echo 'Server running at http://'.$host.':'.$port."\n";
 
 $loop->run();
