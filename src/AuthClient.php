@@ -5,6 +5,7 @@ namespace Pangya;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
+use Pangya\Crypt\Lib;
 
 /**
  * Class AuthClient
@@ -14,9 +15,22 @@ use Nelexa\Buffer\StringBuffer;
 class AuthClient
 {
     /**
+     * @var Lib
+     */
+    protected $crypt;
+
+    /**
+     * AuthClient constructor.
+     */
+    public function __construct()
+    {
+        $this->crypt = new Lib();
+    }
+
+    /**
      * Execute the command.
      *
-     * @param Client $client
+     * @param  Client  $client
      * @param  string  $command
      * @throws BufferException
      */
@@ -25,14 +39,20 @@ class AuthClient
         $buffer = new StringBuffer($command);
         $buffer->insertString($command);
 
-        echo "Data:\n";
-        echo var_dump(bin2hex($buffer->toString())) . "\n";
+        $size = $buffer->setPosition(1)->getUnsignedByte() + 4;
+        $buffer->rewind();
 
-        $securityCheck = $client->securityCheck($buffer);
+        while ($buffer->remaining() >= $size) {
+            if (!$client->securityCheck($buffer)) {
+                $client->disconnect();
 
-        if (!$securityCheck) {
-            echo "NO SECURITY CHECK";
-            return;
+                return;
+            }
+
+            $decrypted = $this->crypt->decrypt(new StringBuffer($buffer->getString($size)));
         }
+
+        dump('correct!');
+        $client->disconnect();
     }
 }

@@ -78,6 +78,14 @@ class Client
     }
 
     /**
+     * Disconnect the client.
+     */
+    public function disconnect(): void
+    {
+        $this->connection->close();
+    }
+
+    /**
      * Send the key to the server.
      *
      * @throws BufferException
@@ -87,14 +95,14 @@ class Client
         // TODO: this is not encrypted but we need to make something in the buffer to encrypt data.
         $buffer = new StringBuffer();
         $buffer->insertArrayBytes([0x00, 0x0b, 0x00, 0x00, 0x00, 0x00]);
-        $buffer->insertInt($this->key);
+        $buffer->insertInt($this->key << 24);
         $buffer->insertArrayBytes([0x75, 0x27, 0x00, 0x00]);
 
         $this->connection->write($buffer->toString());
     }
 
     /**
-     * Execute the security check for the buffer provided.
+     * Execute the security check for the data provided.
      *
      * @param  Buffer  $buffer
      * @return bool
@@ -103,26 +111,10 @@ class Client
     public function securityCheck(Buffer $buffer): bool
     {
         $rand = $buffer->getUnsignedByte();
-        echo 'Rand: '.$rand."\n";
 
-        $posX = Lib::KEYS[($this->key << 8) + $rand + 1];
-        $poxY = Lib::KEYS[($this->key << 8) + $rand + 4097];
+        $x = Lib::KEYS[($this->key << 8) + $rand];
+        $y = Lib::KEYS[($this->key << 8) + $rand + 4096];
 
-        dump($buffer->size());
-        dump($posX);
-        dump($poxY);
-        dump(strlen($buffer->toString()));
-
-        $x = $buffer->setPosition($posX)->getByte();
-        $y = $buffer->setPosition($poxY)->getByte();
-
-        var_dump('x: '.$x.'\n');
-        var_dump('y: '.$y.'\n');
-
-        return false;
-
-        //if not (y = (x xor ord(Buffer[5]))) then
-        // SECURITY CHECK
-
+        return $y === ($x ^ $buffer->skip(3)->getUnsignedByte());
     }
 }

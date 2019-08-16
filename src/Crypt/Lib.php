@@ -2,6 +2,8 @@
 
 namespace Pangya\Crypt;
 
+use Nelexa\Buffer\Buffer;
+
 /**
  * Class Lib
  *
@@ -8232,10 +8234,15 @@ class Lib
     }
 
     /**
+     * Return the packet provided.
      *
+     * @param  Buffer  $buffer
+     * @return Buffer
      */
-    public function decrypt()
+    public function decrypt(Buffer $buffer): Buffer
     {
+        // TODO: DECRYPT
 
+        return $buffer;
     }
 }
