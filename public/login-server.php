@@ -6,17 +6,18 @@
 
 use Pangya\AuthClient;
 use Pangya\Client;
+use Pangya\Util\Util;
 use React\EventLoop\Factory;
 use React\Socket\ConnectionInterface;
 use React\Socket\Server;
-
-$host = '127.0.0.1';
-$port = '10103';
 
 /**
  * Register the auto loader.
  */
 require __DIR__.'/../vendor/autoload.php';
+
+$host = '127.0.0.1';
+$port = Util::PANGYA_US_SERVER_LOGIN_PORT;
 
 $loop = Factory::create();
 $socket = new Server($host.':'.$port, $loop);
@@ -44,7 +45,7 @@ $socket->on('connection', static function (ConnectionInterface $connection) use 
     });
 });
 
-
+// This is not working since it is not doing both handling the connection and the input.
 //try {
 //    $loop->addReadStream(fopen('php://stdin', 'rb'), static function ($stream) {
 //        $line = fgets($stream);

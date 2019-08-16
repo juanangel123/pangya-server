@@ -2,10 +2,10 @@
 
 namespace Pangya;
 
-use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 use Pangya\Crypt\Lib;
+use Pangya\Packet\Buffer as PangyaBuffer;
 
 /**
  * Class AuthClient
@@ -14,6 +14,11 @@ use Pangya\Crypt\Lib;
  */
 class AuthClient
 {
+
+    protected const PACKET_TYPES = [
+        1 => ''
+    ];
+
     /**
      * @var Lib
      */
@@ -37,22 +42,55 @@ class AuthClient
     public function execute(Client $client, string $command): void
     {
         $buffer = new StringBuffer($command);
-        $buffer->insertString($command);
 
-        $size = $buffer->setPosition(1)->getUnsignedByte() + 4;
+        // Check packet size.
+        if ($buffer->size() < Lib::MIN_PACKET_SIZE) {
+            $client->disconnect();
+
+            return;
+        }
+
+        // Get real packet size.
+        $size = ($buffer->setPosition(1)->getUnsignedByte() + 4);
         $buffer->rewind();
 
+        // Check and decompress all packets received.
         while ($buffer->remaining() >= $size) {
             if (!$client->securityCheck($buffer)) {
                 $client->disconnect();
-
                 return;
             }
 
-            $decrypted = $this->crypt->decrypt(new StringBuffer($buffer->getString($size)));
+            $decrypted = $this->crypt->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey());
+
+            $this->parseDecryptedPacket($decrypted);
         }
 
-        dump('correct!');
         $client->disconnect();
+    }
+
+    /**
+     * Parses a decrypted packet.
+     *
+     * @param  PangyaBuffer  $decrypted
+     * @throws BufferException
+     */
+    protected function parseDecryptedPacket(PangyaBuffer $decrypted): void
+    {
+        $packetType = $decrypted->getUnsignedShort();
+        switch ($packetType) {
+            case 1:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 6:
+                break;
+            case 7:
+                break;
+            case 8:
+                break;
+        }
     }
 }

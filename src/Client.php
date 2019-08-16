@@ -7,6 +7,7 @@ use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 use Pangya\Crypt\Lib;
+use Pangya\Crypt\Tables;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -32,9 +33,12 @@ class Client
     protected $verified;
 
     /**
-     * The key to the authentication process.
+     * The key related to the client.
+     * This key works to:
+     * - Authenticate the client.
+     * - Encrypt / decrypt data.
      *
-     * @var string
+     * @var int
      */
     protected $key;
 
@@ -49,13 +53,23 @@ class Client
     }
 
     /**
-     * Return the Client id.
+     * Return the client id.
      *
      * @return int
      */
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * Return the key.
+     *
+     * @return int
+     */
+    public function getKey(): int
+    {
+        return $this->key;
     }
 
     /**
@@ -112,9 +126,15 @@ class Client
     {
         $rand = $buffer->getUnsignedByte();
 
-        $x = Lib::KEYS[($this->key << 8) + $rand];
-        $y = Lib::KEYS[($this->key << 8) + $rand + 4096];
+        $x = Tables::SECURITY_CHECK_TABLE[($this->key << 8) + $rand];
+        $y = Tables::SECURITY_CHECK_TABLE[($this->key << 8) + $rand + 4096];
 
-        return $y === ($x ^ $buffer->skip(3)->getUnsignedByte());
+        if ($y === ($x ^ $buffer->skip(3)->getUnsignedByte())) {
+            $buffer->skip(-Lib::MIN_PACKET_SIZE);
+            return true;
+        }
+
+        $buffer->skip(-Lib::MIN_PACKET_SIZE);
+        return false;
     }
 }
