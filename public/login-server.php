@@ -25,13 +25,13 @@ $socket = new Server($host.':'.$port, $loop);
 $authClient = new AuthClient();
 
 $socket->on('connection', static function (ConnectionInterface $connection) use ($authClient) {
-    echo 'Client connected: '.$connection->getRemoteAddress()."\n";
-
     $client = new Client($connection);
     $client->connect();
 
-    $connection->on('data', static function (string $data) use ($authClient) {
-        $authClient->execute($data);
+    echo 'Client connected: '.$connection->getRemoteAddress().' - ID: '.$client->getId()."\n";
+
+    $connection->on('data', static function (string $data) use ($authClient, $client) {
+        $authClient->execute($client, $data);
     });
     $connection->on('end', static function () use ($client) {
         echo 'Client: '.$client->getId()." has end the connection\n";

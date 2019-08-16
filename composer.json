@@ -18,5 +18,8 @@
         "psr-4": {
             "Pangya\\": "src/"
         }
+    },
+    "require-dev": {
+        "larapack/dd": "^1.1"
     }
 }

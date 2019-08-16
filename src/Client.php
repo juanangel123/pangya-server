@@ -3,8 +3,10 @@
 namespace Pangya;
 
 use Exception;
+use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
+use Pangya\Crypt\Lib;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -30,7 +32,7 @@ class Client
     protected $verified;
 
     /**
-     * Byte containing the key to the authentication process.
+     * The key to the authentication process.
      *
      * @var string
      */
@@ -63,7 +65,7 @@ class Client
      */
     public function connect(): void
     {
-        $this->key = random_bytes(1);
+        $this->key = random_int(0, 15); // Random hex.
 
         // TODO: set a random connection id.
         // Original: pool between 0 to 2999 taken from an array of connections (3000).
@@ -85,18 +87,42 @@ class Client
         // TODO: this is not encrypted but we need to make something in the buffer to encrypt data.
         $buffer = new StringBuffer();
         $buffer->insertArrayBytes([0x00, 0x0b, 0x00, 0x00, 0x00, 0x00]);
-        // TODO: to check: the key is 6 byte length (length + data).
-        $buffer->insertArrayBytes([6, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        $buffer->insertInt($this->key);
         $buffer->insertArrayBytes([0x75, 0x27, 0x00, 0x00]);
 
         $this->connection->write($buffer->toString());
     }
 
     /**
-     * @param $buffer
+     * Execute the security check for the buffer provided.
+     *
+     * @param  Buffer  $buffer
+     * @return bool
+     * @throws BufferException
      */
-    public function processCommand($buffer)
+    public function securityCheck(Buffer $buffer): bool
     {
+        $rand = $buffer->getUnsignedByte();
+        echo 'Rand: '.$rand."\n";
+
+        $posX = Lib::KEYS[($this->key << 8) + $rand + 1];
+        $poxY = Lib::KEYS[($this->key << 8) + $rand + 4097];
+
+        dump($buffer->size());
+        dump($posX);
+        dump($poxY);
+        dump(strlen($buffer->toString()));
+
+        $x = $buffer->setPosition($posX)->getByte();
+        $y = $buffer->setPosition($poxY)->getByte();
+
+        var_dump('x: '.$x.'\n');
+        var_dump('y: '.$y.'\n');
+
+        return false;
+
+        //if not (y = (x xor ord(Buffer[5]))) then
+        // SECURITY CHECK
 
     }
 }
