@@ -1,45 +1,45 @@
 <?php
 
-namespace Pangya;
+namespace Pangya\Auth;
 
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
+use Pangya\ClientPlayer;
 use Pangya\Crypt\Lib;
+use Pangya\LoginServer;
 use Pangya\Packet\Buffer as PangyaBuffer;
 
 /**
- * Class AuthClient
+ * This represents the global client for auth purposes.
+ * TODO: this class is which should implement pooling?
  *
- * @package Pangya
+ * @package Pangya\Auth
  */
-class AuthClient
+class Client
 {
-
-    protected const PACKET_TYPES = [
-        1 => ''
-    ];
+    /**
+     * @var LoginServer
+     */
+    protected $loginServer;
 
     /**
-     * @var Lib
+     * Client constructor.
+     *
+     * @param  LoginServer  $loginServer
      */
-    protected $crypt;
-
-    /**
-     * AuthClient constructor.
-     */
-    public function __construct()
+    public function __construct(LoginServer $loginServer)
     {
-        $this->crypt = new Lib();
+        $this->loginServer = $loginServer;
     }
 
     /**
      * Execute the command.
      *
-     * @param  Client  $client
+     * @param  ClientPlayer  $client
      * @param  string  $command
      * @throws BufferException
      */
-    public function execute(Client $client, string $command): void
+    public function execute(ClientPlayer $client, string $command): void
     {
         $buffer = new StringBuffer($command);
 
@@ -58,12 +58,13 @@ class AuthClient
         while ($buffer->remaining() >= $size) {
             if (!$client->securityCheck($buffer)) {
                 $client->disconnect();
+
                 return;
             }
 
-            $decrypted = $this->crypt->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey());
+            $decrypted = $this->loginServer->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey());
 
-            $this->parseDecryptedPacket($decrypted);
+            $this->parseDecryptedPacket($client, $decrypted);
         }
 
         $client->disconnect();
@@ -72,24 +73,26 @@ class AuthClient
     /**
      * Parses a decrypted packet.
      *
+     * @param  ClientPlayer  $client
      * @param  PangyaBuffer  $decrypted
      * @throws BufferException
      */
-    protected function parseDecryptedPacket(PangyaBuffer $decrypted): void
+    protected function parseDecryptedPacket(ClientPlayer $client, PangyaBuffer $decrypted): void
     {
         $packetType = $decrypted->getUnsignedShort();
         switch ($packetType) {
-            case 1:
+            case PacketTypes::HANDLE_PLAYER_LOGIN:
+                $client->handlePlayerLogin();
                 break;
-            case 3:
+            case PacketTypes::SEND_GAME_AUTH_KEY:
                 break;
-            case 4:
+            case PacketTypes::HANDLE_DUPLICATE_LOGIN:
                 break;
-            case 6:
+            case PacketTypes::CREATE_CHARACTER:
                 break;
-            case 7:
+            case PacketTypes::NICKNAME_CHECK:
                 break;
-            case 8:
+            case PacketTypes::REQUEST_CHARACTER_CREATE:
                 break;
         }
     }

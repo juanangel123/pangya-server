@@ -4,11 +4,10 @@ namespace Pangya\Crypt;
 
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
-use Nelexa\Buffer\StringBuffer;
 use Pangya\Packet\Buffer as PangyaBuffer;
 
 /**
- * Class Lib
+ * Class used to encrypt and decrypt packets from the server-side.
  *
  * @link https://github.com/pangyatools/PangCrypt/blob/master/PangCrypt/ClientCipher.cs
  * @link https://github.com/pangyatools/PangCrypt/blob/master/PangCrypt/ServerCipher.cs
@@ -23,11 +22,15 @@ class Lib
     public const MIN_PACKET_SIZE = 5;
 
     /**
+     * Encrypt the packet provided.
      *
+     * @param  Buffer  $buffer
+     * @param  int  $key
+     * @return PangyaBuffer
      */
-    public function encrypt()
+    public function encrypt(Buffer $buffer, int $key): Buffer
     {
-
+        return $buffer;
     }
 
     /**

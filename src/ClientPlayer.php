@@ -6,21 +6,27 @@ use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
+use Pangya\Auth\Client;
 use Pangya\Crypt\Lib;
 use Pangya\Crypt\Tables;
 use React\Socket\ConnectionInterface;
 
 /**
- * Class Client
+ * This class represents the client for player related purposes.
  *
  * @package Pangya
  */
-class Client
+class ClientPlayer
 {
     /**
      * @var ConnectionInterface
      */
     protected $connection;
+
+    /**
+     * @var LoginServer
+     */
+    protected $loginServer;
 
     /**
      * @var int Id of the connection.
@@ -43,13 +49,15 @@ class Client
     protected $key;
 
     /**
-     * Client constructor.
+     * ClientPlayer constructor.
      *
      * @param  ConnectionInterface  $connection
+     * @param  LoginServer  $loginServer
      */
-    public function __construct(ConnectionInterface $connection)
+    public function __construct(ConnectionInterface $connection, LoginServer $loginServer)
     {
         $this->connection = $connection;
+        $this->loginServer = $loginServer;
     }
 
     /**
@@ -100,19 +108,37 @@ class Client
     }
 
     /**
+     * Send buffer data through the connection.
+     *
+     * @param  Buffer  $buffer
+     * @param  bool  $encrypt
+     */
+    protected function send(Buffer $buffer, bool $encrypt = false): void
+    {
+        if (!$buffer->size()) {
+            return;
+        }
+
+        if ($encrypt) {
+            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key);
+        }
+
+        $this->connection->write($buffer->toString());
+    }
+
+    /**
      * Send the key to the server.
      *
      * @throws BufferException
      */
     public function sendKey(): void
     {
-        // TODO: this is not encrypted but we need to make something in the buffer to encrypt data.
         $buffer = new StringBuffer();
         $buffer->insertArrayBytes([0x00, 0x0b, 0x00, 0x00, 0x00, 0x00]);
         $buffer->insertInt($this->key << 24);
         $buffer->insertArrayBytes([0x75, 0x27, 0x00, 0x00]);
 
-        $this->connection->write($buffer->toString());
+        $this->send($buffer);
     }
 
     /**
@@ -131,10 +157,23 @@ class Client
 
         if ($y === ($x ^ $buffer->skip(3)->getUnsignedByte())) {
             $buffer->skip(-Lib::MIN_PACKET_SIZE);
+
             return true;
         }
 
         $buffer->skip(-Lib::MIN_PACKET_SIZE);
+
         return false;
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function handlePlayerLogin(): void
+    {
+        //if ($this->loginServer->isUnderMaintenance()) {
+        if (true) {
+            $this->send(new StringBuffer([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]), true);
+        }
     }
 }
