@@ -6,7 +6,8 @@ use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 use Pangya\Packet\Buffer as PangyaBuffer;
-use Pangya\Util\LZO;
+use Pangya\Util\MiniLZO;
+use Pangya\Util\Util;
 
 /**
  * Class used to encrypt and decrypt packets from the server-side.
@@ -54,14 +55,27 @@ class Lib
         $encrypted->insertByte($y);
         $encrypted->insertByte($x);
 
+        dump('uncompressed');
+        Util::showHex($buffer);
+
         // Insert compressed string.
-        $encrypted->insertString(LZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->toString())));
+        $compressed = MiniLZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->toString()));
+
+        $encrypted->insertArrayBytes($compressed);
+
+        dump('compressed');
+        Util::showHex($encrypted);
 
         for ($i = $buffer->size() - 1; $i >= 10; $i--) {
             $encrypted->setPosition($i)->putByte($buffer->getUnsignedByte() ^ $buffer->setPosition($i - 4)->getUnsignedByte());
         }
 
-        return $encrypted->setPosition(7)->putByte($buffer->getUnsignedByte() ^ Tables::CRYPT_TABLE_2[$index])->rewind();
+        $encrypted = $encrypted->setPosition(7)->putByte($buffer->getUnsignedByte() ^ Tables::CRYPT_TABLE_2[$index])->rewind();
+
+        dump('encrypted');
+        Util::showHex($encrypted);
+
+        return $encrypted;
     }
 
     /**

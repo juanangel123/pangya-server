@@ -120,15 +120,9 @@ class ClientPlayer
             return;
         }
 
-        dump('before');
-        Util::showHex($buffer);
-
         if ($encrypt) {
             $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key, 0);
         }
-
-        dump('after');
-        Util::showHex($buffer);
 
         $this->connection->write($buffer->toString());
     }
@@ -178,6 +172,18 @@ class ClientPlayer
      */
     public function handlePlayerLogin(): void
     {
+        /**
+         * [17/08/2019 21:37:36:474] unencrypted + uncompresed
+        [17/08/2019 21:37:36:474] 01 00 E3 48 D2 4D 00
+        [17/08/2019 21:37:36:474] encrypted + compresed
+        [17/08/2019 21:37:36:474] 81 10 00 CD 00 00 00 35 18 01 00 E4 50 D3 4D E3 59 D2 4D
+         */
+
+        /**
+         * unencrypted + compressed
+         */
+        // 18 1 0 E3 48 D2 4D 0 11 0 0
+
         //if ($this->loginServer->isUnderMaintenance()) {
         if (true) {
             $buffer = new StringBuffer();

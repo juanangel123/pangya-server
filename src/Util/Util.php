@@ -4,6 +4,7 @@ namespace Pangya\Util;
 
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
+use Nelexa\Buffer\Cast;
 
 /**
  * Class Util
@@ -38,5 +39,41 @@ class Util
         echo "\n";
 
         $buffer->rewind();
+    }
+
+    /**
+     * @link https://docs.microsoft.com/es-es/dotnet/api/system.array.copy?view=netframework-4.8#System_Array_Copy_System_Array_System_Int32_System_Array_System_Int32_System_Int32_
+     *
+     * @param  array  $input
+     * @param  int  $inputIndex
+     * @param  array  $output
+     * @param  int  $outputIndex
+     * @param  int  $length
+     */
+    public static function copyArray(array $input, int $inputIndex, array &$output, int $outputIndex, int $length): void
+    {
+        for ($x = 0; $x < ($length - $outputIndex); $x++) {
+            $output[$outputIndex + $x] = $input[$inputIndex + $x];
+        }
+    }
+
+    /**
+     * @param  array  $array
+     * @param  int  $i
+     * @return int
+     */
+    public static function readU16(array $array, int $i): int
+    {
+        return Cast::toUnsignedShort($array[$i] | ($array[$i + 1] << 8));
+    }
+
+    /**
+     * @param  array  $array
+     * @param  int  $i
+     * @return int
+     */
+    public static function readU32(array $array, int $i): int
+    {
+        return Cast::toUnsignedInt($array[$i] | ($array[$i + 1] << 8) | ($array[$i + 2] << 16) | ($array[$i + 3] << 24));
     }
 }
