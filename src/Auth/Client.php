@@ -8,6 +8,7 @@ use Pangya\ClientPlayer;
 use Pangya\Crypt\Lib;
 use Pangya\LoginServer;
 use Pangya\Packet\Buffer as PangyaBuffer;
+use Pangya\Util\Util;
 
 /**
  * This represents the global client for auth purposes.
@@ -46,7 +47,6 @@ class Client
         // Check packet size.
         if ($buffer->size() < Lib::MIN_PACKET_SIZE) {
             $client->disconnect();
-
             return;
         }
 
@@ -58,13 +58,10 @@ class Client
         while ($buffer->remaining() >= $size) {
             if (!$client->securityCheck($buffer)) {
                 $client->disconnect();
-
                 return;
             }
 
-            $decrypted = $this->loginServer->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey());
-
-            $this->parseDecryptedPacket($client, $decrypted);
+            $this->parseDecryptedPacket($client, $this->loginServer->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
         }
 
         $client->disconnect();
@@ -94,6 +91,9 @@ class Client
                 break;
             case PacketTypes::REQUEST_CHARACTER_CREATE:
                 break;
+            default:
+                echo "Unknown packet:\n";
+                Util::showHex($decrypted);
         }
     }
 }

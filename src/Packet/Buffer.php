@@ -18,7 +18,7 @@ class Buffer extends StringBuffer
      * @param  string  $string
      * @throws BufferException
      */
-    public function __construct(string $string)
+    public function __construct(string $string = '')
     {
         $this->setOrder(self::LITTLE_ENDIAN);
 

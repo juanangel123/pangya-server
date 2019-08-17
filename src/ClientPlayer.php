@@ -6,9 +6,9 @@ use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use Pangya\Auth\Client;
 use Pangya\Crypt\Lib;
 use Pangya\Crypt\Tables;
+use Pangya\Util\Util;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -112,6 +112,7 @@ class ClientPlayer
      *
      * @param  Buffer  $buffer
      * @param  bool  $encrypt
+     * @throws BufferException
      */
     protected function send(Buffer $buffer, bool $encrypt = false): void
     {
@@ -119,9 +120,15 @@ class ClientPlayer
             return;
         }
 
+        dump('before');
+        Util::showHex($buffer);
+
         if ($encrypt) {
-            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key);
+            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key, 0);
         }
+
+        dump('after');
+        Util::showHex($buffer);
 
         $this->connection->write($buffer->toString());
     }
@@ -173,7 +180,9 @@ class ClientPlayer
     {
         //if ($this->loginServer->isUnderMaintenance()) {
         if (true) {
-            $this->send(new StringBuffer([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]), true);
+            $buffer = new StringBuffer();
+            $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
+            $this->send($buffer, true);
         }
     }
 }

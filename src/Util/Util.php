@@ -15,7 +15,7 @@ class Util
     /**
      * @var string
      */
-    public const PANGYA_US_SERVER_LOGIN_PORT = '10103';
+    public const PANGYA_US_LOGIN_SERVER_PORT = '10103';
 
     /**
      * Show hex representation of a buffer.
