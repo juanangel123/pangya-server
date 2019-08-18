@@ -21,6 +21,8 @@ class Util
      */
     public static function showHex(Buffer $buffer): void
     {
+        $oldPosition  = $buffer->position();
+
         $buffer->rewind();
 
         while ($buffer->remaining() > 0) {
@@ -33,7 +35,7 @@ class Util
 
         echo "\n";
 
-        $buffer->rewind();
+        $buffer->setPosition($oldPosition);
     }
 
     /**

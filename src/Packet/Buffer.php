@@ -24,4 +24,18 @@ class Buffer extends StringBuffer
 
         parent::__construct($string);
     }
+
+    /**
+     * Read an string based on the current pointer of the buffer.
+     *
+     * @return string|null
+     */
+    public function readString(): ?string
+    {
+        try {
+            return implode(array_map('chr', $this->getArrayBytes($this->getUnsignedShort())));
+        } catch (BufferException $e) {
+            return null;
+        }
+    }
 }

@@ -80,15 +80,18 @@ class Lib
      */
     public function decrypt(Buffer $buffer, int $key): Buffer
     {
-        $decrypted = new PangYaBuffer($buffer->toString());
+        $decrypted = new StringBuffer($buffer->toString());
 
-        $decrypted->setPosition(self::MIN_PACKET_SIZE - 1)->putByte(Tables::CRYPT_TABLE_2[($key << 8) + $buffer->getUnsignedByte()]);
+        $data = Tables::CRYPT_TABLE_2[($key << 8) + $decrypted->getUnsignedByte()];
+        $decrypted->setPosition(self::MIN_PACKET_SIZE - 1)->putByte($data);
 
-        for ($i = 8; $i < $buffer->size(); $i++) {
-            $data = $buffer->setPosition($i)->getUnsignedByte() ^ $buffer->setPosition($i - 4)->getUnsignedByte();
+        for ($i = 8; $i < $decrypted->size(); $i++) {
+            $data = $decrypted->setPosition($i)->getUnsignedByte() ^ $decrypted->setPosition($i - 4)->getUnsignedByte();
             $decrypted->setPosition($i)->putByte($data);
         }
 
-        return $decrypted->rewind()->remove(self::MIN_PACKET_SIZE);
+        $decrypted->rewind()->remove(self::MIN_PACKET_SIZE);
+
+        return new PangYaBuffer($decrypted->toString());
     }
 }

@@ -77,7 +77,7 @@ class Client
         $packetType = $decrypted->getUnsignedShort();
         switch ($packetType) {
             case PacketTypes::HANDLE_PLAYER_LOGIN:
-                $client->handlePlayerLogin();
+                $client->handlePlayerLogin($decrypted);
                 break;
             case PacketTypes::SEND_GAME_AUTH_KEY:
                 break;

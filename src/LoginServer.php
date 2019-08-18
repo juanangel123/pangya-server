@@ -113,12 +113,15 @@ class LoginServer
     }
 
     /**
+     * Test against server encryption / decryption and MiniLZO compression / decompression.
+     *
      * @throws BufferException
      */
     protected function testEncryption(): void
     {
         $buffer = new StringBuffer();
         $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
+
         $compressed = MiniLZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->size()));
 
         $buffer2 = new StringBuffer();
@@ -131,10 +134,85 @@ class LoginServer
         // 0 10 0 0 0 0 0 7 18 1 0 E4 50 D3 4D E3 59 D2 4D
 
         $decompressed = MiniLZO::decompress1X($compressed);
+
         $buffer4 = new StringBuffer();
         $buffer4->insertArrayBytes($decompressed);
         Util::showHex($buffer4);
         // 1 0 E3 48 D2 4D 0
+
+        $buffer5 = new StringBuffer();
+        $buffer5->insertArrayBytes([
+            0xcc,
+            0x3c,
+            0x00,
+            0x00,
+            0x8e,
+            0x01,
+            0x00,
+            0x04,
+            0x7d,
+            0x75,
+            0x65,
+            0x77,
+            0x74,
+            0x54,
+            0x65,
+            0x43,
+            0x4d,
+            0x18,
+            0x46,
+            0x06,
+            0x7b,
+            0x7b,
+            0x02,
+            0x02,
+            0x74,
+            0x71,
+            0x75,
+            0x70,
+            0x05,
+            0x05,
+            0x02,
+            0x07,
+            0x72,
+            0x73,
+            0x76,
+            0x77,
+            0x04,
+            0x7c,
+            0x76,
+            0x06,
+            0x73,
+            0x0a,
+            0x04,
+            0x70,
+            0x02,
+            0x74,
+            0x01,
+            0x42,
+            0x34,
+            0x46,
+            0x36,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        ]);
+        $buffer5->rewind();
+
+        $result = $this->crypt->decrypt($buffer5, 1);
+        Util::showHex($result);
+        // KEY: 1
+        // 01 00 04 00 74 65 73 74 20 00 30 39 38 46 36 42 43 44 34 36 32 31 44 33 37 33 43 41 44 45 34 45 38 33 32 36 32 37 42 34 46 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
     }
 
     /**

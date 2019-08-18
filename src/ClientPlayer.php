@@ -8,6 +8,8 @@ use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 use PangYa\Crypt\Lib;
 use PangYa\Crypt\Tables;
+use PangYa\Packet\Buffer as PangyaBuffer;
+use PangYa\Util\Util;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -167,17 +169,27 @@ class ClientPlayer
     }
 
     /**
+     * Handle player login.
+     *
+     * @param  PangyaBuffer  $buffer
      * @throws BufferException
      */
-    public function handlePlayerLogin(): void
+    public function handlePlayerLogin(PangyaBuffer $buffer): void
     {
         if ($this->loginServer->isUnderMaintenance()) {
-            $buffer = new StringBuffer();
-            $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2]);
-            $buffer->insertString(Messages::MAINTENANCE);
-            $buffer->insertByte(0x00);
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2]);
+            $response->insertString(Messages::MAINTENANCE);
+            $response->insertByte(0x00);
 
-            $this->send($buffer, true);
+            $this->send($response, true);
         }
+
+        if ((!$user = $buffer->readString()) || (!$password = $buffer->readString())) {
+            return;
+        }
+
+        dump('user: '.$user);
+        dump('password: '.$password);
     }
 }
