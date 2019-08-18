@@ -1,11 +1,8 @@
 <?php
 
-namespace Pangya\Util;
+namespace PangYa\Util;
 
 use Nelexa\Buffer\Cast;
-
-/*
- */
 
 /**
  * Class MiniLZO
@@ -30,12 +27,11 @@ use Nelexa\Buffer\Cast;
  * <markus@oberhumer.com>
  * http://www.oberhumer.com/opensource/lzo/
  *
- *
  * @link https://github.com/pangyatools/PangCrypt/blob/master/PangCrypt/MiniLzo.cs
  * @link https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Oberhumer
  * @link https://en.wikipedia.org/wiki/De_Bruijn_sequence
  *
- * @package Pangya\Util
+ * @package PangYa\Util
  */
 class MiniLZO
 {
@@ -127,14 +123,12 @@ class MiniLZO
             if ($ip >= $ipEnd) {
                 break;
             }
-            $dv = Util::readU32($input, $ip);
-            // TODO: CHECK
-            // var dIndex = (((0x1824429d * dv) >> (32 - 14)) & (((1u << 14) - 1) >> 0)) << 0;
+            $dv = Util::readUnsignedInt($input, $ip);
             $dIndex = Cast::toUnsignedShort((((405029533 * $dv) >> (32 - 14)) & ((Cast::toUnsignedShort(1 << 14) - 1) >> 0)) << 0);
 
             $mPos = $inIndex + $dict[$dIndex];
             $dict[$dIndex] = Cast::toUnsignedShort($ip - $inIndex);
-            if ($dv !== Util::readU32($input, $mPos)) {
+            if ($dv !== Util::readUnsignedInt($input, $mPos)) {
                 goto literal;
             }
 
@@ -174,10 +168,10 @@ class MiniLZO
             $mLen = 4;
 
             {
-                $v = Util::readU32($input, $ip + $mLen) ^ Util::readU32($input, $mPos + $mLen);
+                $v = Util::readUnsignedInt($input, $ip + $mLen) ^ Util::readUnsignedInt($input, $mPos + $mLen);
                 while ($v === 0) {
                     $mLen += 4;
-                    $v = Util::readU32($input, $ip + $mLen) ^ Util::readU32($input, $mPos + $mLen);
+                    $v = Util::readUnsignedInt($input, $ip + $mLen) ^ Util::readUnsignedInt($input, $mPos + $mLen);
                     if ($ip + $mLen >= $ipEnd) {
                         goto m_len_done;
                     }

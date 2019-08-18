@@ -1,11 +1,11 @@
 <?php
 
-namespace Pangya\Auth;
+namespace PangYa\Auth;
 
 /**
  * Class PacketTypes
  *
- * @package Pangya\Auth
+ * @package PangYa\Auth
  */
 class PacketTypes
 {

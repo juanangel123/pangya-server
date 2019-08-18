@@ -1,4 +1,4 @@
-## Pangya Server
+## PangYa Server
 
 * Login Server
 * Message Server

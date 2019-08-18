@@ -1,14 +1,14 @@
 <?php
 
-namespace Pangya\Packet;
+namespace PangYa\Packet;
 
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 
 /**
- * This class will implement a type of buffer used for Pangya operations.
+ * This class will implement a type of buffer used for PangYa operations.
  *
- * @package Pangya\Packet
+ * @package PangYa\Packet
  */
 class Buffer extends StringBuffer
 {

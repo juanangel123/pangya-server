@@ -1,20 +1,20 @@
 <?php
 
-namespace Pangya\Auth;
+namespace PangYa\Auth;
 
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use Pangya\ClientPlayer;
-use Pangya\Crypt\Lib;
-use Pangya\LoginServer;
-use Pangya\Packet\Buffer as PangyaBuffer;
-use Pangya\Util\Util;
+use PangYa\ClientPlayer;
+use PangYa\Crypt\Lib;
+use PangYa\LoginServer;
+use PangYa\Packet\Buffer as PangYaBuffer;
+use PangYa\Util\Util;
 
 /**
  * This represents the global client for auth purposes.
  * TODO: this class is which should implement pooling?
  *
- * @package Pangya\Auth
+ * @package PangYa\Auth
  */
 class Client
 {
@@ -63,18 +63,16 @@ class Client
 
             $this->parseDecryptedPacket($client, $this->loginServer->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
         }
-
-        $client->disconnect();
     }
 
     /**
      * Parses a decrypted packet.
      *
      * @param  ClientPlayer  $client
-     * @param  PangyaBuffer  $decrypted
+     * @param  PangYaBuffer  $decrypted
      * @throws BufferException
      */
-    protected function parseDecryptedPacket(ClientPlayer $client, PangyaBuffer $decrypted): void
+    protected function parseDecryptedPacket(ClientPlayer $client, PangYaBuffer $decrypted): void
     {
         $packetType = $decrypted->getUnsignedShort();
         switch ($packetType) {

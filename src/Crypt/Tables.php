@@ -1,13 +1,13 @@
 <?php
 
-namespace Pangya\Crypt;
+namespace PangYa\Crypt;
 
 /**
  * This class contains the tables used for the security check and the encryption / decryption of data.
  *
  * @link https://github.com/pangyatools/PangCrypt/blob/master/PangCrypt/CryptoOracle.cs
  *
- * @package Pangya\Crypt
+ * @package PangYa\Crypt
  */
 class Tables
 {

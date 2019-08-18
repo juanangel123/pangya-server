@@ -1,20 +1,23 @@
 <?php
 
 /**
- * This is the Pangya Login Server main entry point.
+ * This is the PangYa Login Server main entry point.
  */
 
-use Pangya\LoginServer;
-use Pangya\Util\Util;
+use PangYa\LoginServer;
+use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * Register the auto loader.
  */
 require __DIR__.'/../vendor/autoload.php';
 
-$loginServer = new LoginServer('127.0.0.1', Util::PANGYA_US_LOGIN_SERVER_PORT);
+$dotEnv = new Dotenv();
+$dotEnv->load(__DIR__.'/../.env');
 
-echo "Pangya Fresh UP! Login Server\n";
+$loginServer = new LoginServer($_ENV['LOGIN_SERVER_HOST'], $_ENV['LOGIN_SERVER_PORT']);
+
+echo "PangYa Fresh UP! Login Server\n";
 echo 'Server running at http://'.$loginServer->getHost().':'.$loginServer->getPort()."\n";
 
 $loginServer->getLoop()->run();

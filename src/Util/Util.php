@@ -1,23 +1,18 @@
 <?php
 
-namespace Pangya\Util;
+namespace PangYa\Util;
 
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\Cast;
 
 /**
- * Class Util
+ * Utility functions.
  *
- * @package Pangya\Util
+ * @package PangYa\Util
  */
 class Util
 {
-    /**
-     * @var string
-     */
-    public const PANGYA_US_LOGIN_SERVER_PORT = '10103';
-
     /**
      * Show hex representation of a buffer.
      *
@@ -42,6 +37,9 @@ class Util
     }
 
     /**
+     * Copy a part of an array to another array.
+     * This is a copy from the same method in C#:
+     *
      * @link https://docs.microsoft.com/es-es/dotnet/api/system.array.copy?view=netframework-4.8#System_Array_Copy_System_Array_System_Int32_System_Array_System_Int32_System_Int32_
      *
      * @param  array  $input
@@ -58,21 +56,25 @@ class Util
     }
 
     /**
+     * Read an unsigned short from a byte array.
+     *
      * @param  array  $array
      * @param  int  $i
      * @return int
      */
-    public static function readU16(array $array, int $i): int
+    public static function readUnsignedShort(array $array, int $i): int
     {
         return Cast::toUnsignedShort($array[$i] | ($array[$i + 1] << 8));
     }
 
     /**
+     * Read an unsigned int from a byte array.
+     *
      * @param  array  $array
      * @param  int  $i
      * @return int
      */
-    public static function readU32(array $array, int $i): int
+    public static function readUnsignedInt(array $array, int $i): int
     {
         return Cast::toUnsignedInt($array[$i] | ($array[$i + 1] << 8) | ($array[$i + 2] << 16) | ($array[$i + 3] << 24));
     }

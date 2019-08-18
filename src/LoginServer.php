@@ -1,10 +1,14 @@
 <?php
 
-namespace Pangya;
+namespace PangYa;
 
 use Exception;
-use Pangya\Auth\Client;
-use Pangya\Crypt\Lib;
+use Nelexa\Buffer\BufferException;
+use Nelexa\Buffer\StringBuffer;
+use PangYa\Auth\Client;
+use PangYa\Crypt\Lib;
+use PangYa\Util\MiniLZO;
+use PangYa\Util\Util;
 use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Socket\ConnectionInterface;
@@ -13,7 +17,7 @@ use React\Socket\Server;
 /**
  * Class LoginServer
  *
- * @package Pangya
+ * @package PangYa
  */
 class LoginServer
 {
@@ -104,6 +108,28 @@ class LoginServer
 
         $this->crypt = new Lib();
         $this->authClient = new Client($this);
+
+        // $this->testEncryption();
+    }
+
+    /**
+     * @throws BufferException
+     */
+    protected function testEncryption(): void
+    {
+        $buffer = new StringBuffer();
+        $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
+        $compressed = MiniLZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->size()));
+
+
+        $buffer2 = new StringBuffer();
+        $buffer2->insertArrayBytes($compressed);
+        Util::showHex($buffer2);
+        // 18 1 0 E3 48 D2 4D 0 11 0 0
+
+        $buffer3 = $this->crypt->encrypt($buffer, 0, 0);
+        Util::showHex($buffer3);
+        // 0 10 0 0 0 0 0 7 18 1 0 E4 50 D3 4D E3 59 D2 4D
     }
 
     /**

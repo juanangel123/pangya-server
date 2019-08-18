@@ -1,20 +1,19 @@
 <?php
 
-namespace Pangya;
+namespace PangYa;
 
 use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use Pangya\Crypt\Lib;
-use Pangya\Crypt\Tables;
-use Pangya\Util\Util;
+use PangYa\Crypt\Lib;
+use PangYa\Crypt\Tables;
 use React\Socket\ConnectionInterface;
 
 /**
  * This class represents the client for player related purposes.
  *
- * @package Pangya
+ * @package PangYa
  */
 class ClientPlayer
 {
@@ -81,7 +80,7 @@ class ClientPlayer
     }
 
     /**
-     * Connect to the Pangya Server using the connection.
+     * Connect to the PangYa Server using the connection.
      *
      * @throws Exception
      */
@@ -172,22 +171,12 @@ class ClientPlayer
      */
     public function handlePlayerLogin(): void
     {
-        /**
-         * [17/08/2019 21:37:36:474] unencrypted + uncompresed
-        [17/08/2019 21:37:36:474] 01 00 E3 48 D2 4D 00
-        [17/08/2019 21:37:36:474] encrypted + compresed
-        [17/08/2019 21:37:36:474] 81 10 00 CD 00 00 00 35 18 01 00 E4 50 D3 4D E3 59 D2 4D
-         */
-
-        /**
-         * unencrypted + compressed
-         */
-        // 18 1 0 E3 48 D2 4D 0 11 0 0
-
-        //if ($this->loginServer->isUnderMaintenance()) {
-        if (true) {
+        if ($this->loginServer->isUnderMaintenance()) {
             $buffer = new StringBuffer();
-            $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
+            $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2]);
+            $buffer->insertString(Messages::MAINTENANCE);
+            $buffer->insertByte(0x00);
+
             $this->send($buffer, true);
         }
     }
