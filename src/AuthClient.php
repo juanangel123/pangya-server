@@ -4,43 +4,36 @@ namespace PangYa\Auth;
 
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use PangYa\ClientPlayer;
+use PangYa\Player;
 use PangYa\Crypt\Lib;
 use PangYa\LoginServer;
 use PangYa\Packet\Buffer as PangYaBuffer;
+use PangYa\Server;
 use PangYa\Util\Util;
 
 /**
- * This represents the global client for auth purposes.
- * TODO: this class is which should implement pooling?
+ * This represents the client for auth purposes.
  *
- * @package PangYa\Auth
+ * @package PangYa
  */
-class Client
+class AuthClient extends Server
 {
     /**
-     * @var LoginServer
-     */
-    protected $loginServer;
-
-    /**
-     * Client constructor.
      *
-     * @param  LoginServer  $loginServer
      */
-    public function __construct(LoginServer $loginServer)
+    public function init(): void
     {
-        $this->loginServer = $loginServer;
+
     }
 
     /**
      * Execute the command.
      *
-     * @param  ClientPlayer  $client
+     * @param  Player  $client
      * @param  string  $command
      * @throws BufferException
      */
-    public function execute(ClientPlayer $client, string $command): void
+    public function execute(Player $client, string $command): void
     {
         $buffer = new StringBuffer($command);
 
@@ -61,18 +54,18 @@ class Client
                 return;
             }
 
-            $this->parseDecryptedPacket($client, $this->loginServer->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
+            $this->parseDecryptedPacket($client, $this->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
         }
     }
 
     /**
      * Parses a decrypted packet.
      *
-     * @param  ClientPlayer  $client
+     * @param  Player  $client
      * @param  PangYaBuffer  $decrypted
      * @throws BufferException
      */
-    protected function parseDecryptedPacket(ClientPlayer $client, PangYaBuffer $decrypted): void
+    protected function parseDecryptedPacket(Player $client, PangYaBuffer $decrypted): void
     {
         $packetType = $decrypted->getUnsignedShort();
         switch ($packetType) {

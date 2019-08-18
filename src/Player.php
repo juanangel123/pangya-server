@@ -9,15 +9,14 @@ use Nelexa\Buffer\StringBuffer;
 use PangYa\Crypt\Lib;
 use PangYa\Crypt\Tables;
 use PangYa\Packet\Buffer as PangyaBuffer;
-use PangYa\Util\Util;
 use React\Socket\ConnectionInterface;
 
 /**
- * This class represents the client for player related purposes.
+ * This class represents the player.
  *
  * @package PangYa
  */
-class ClientPlayer
+class Player
 {
     /**
      * @var ConnectionInterface
@@ -48,6 +47,16 @@ class ClientPlayer
      * @var int
      */
     protected $key;
+
+    /**
+     * @var string
+     */
+    protected $username;
+
+    /**
+     * @var string
+     */
+    protected $nickname;
 
     /**
      * ClientPlayer constructor.
@@ -82,6 +91,38 @@ class ClientPlayer
     }
 
     /**
+     * @return string
+     */
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    /**
+     * @param  string  $username
+     */
+    public function setUsername(string $username): void
+    {
+        $this->username = $username;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNickname(): string
+    {
+        return $this->nickname;
+    }
+
+    /**
+     * @param  string  $nickname
+     */
+    public function setNickname(string $nickname): void
+    {
+        $this->nickname = $nickname;
+    }
+
+    /**
      * Connect to the PangYa Server using the connection.
      *
      * @throws Exception
@@ -94,8 +135,6 @@ class ClientPlayer
         // Original: pool between 0 to 2999 taken from an array of connections (3000).
         // $this->id = random_int(0, 2999);
         $this->id = 0;
-
-        // TODO: add to a pool of players.
 
         $this->sendKey();
     }
@@ -191,5 +230,57 @@ class ClientPlayer
 
         dump('user: '.$user);
         dump('password: '.$password);
+
+        if ($this->loginServer->getPlayerById($this->id)) {
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x4b, 0xd2]);
+            $response->insertString(Messages::PLAYER_ALREADY_LOGGED);
+            $response->insertByte(0x00);
+
+            $this->send($response, true);
+        }
+
+        // TODO: User not found.
+        if (false) {
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x6f, 0xd2]);
+            $response->insertString(Messages::PLAYER_NOT_FOUND);
+            $response->insertByte(0x00);
+        }
+
+        // TODO: Password error.
+        if (false) {
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x5b, 0xd2]);
+            $response->insertString(Messages::PLAYER_PASSWORD_ERROR);
+            $response->insertByte(0x00);
+        }
+
+        // TODO: Player banned.
+        if (false) {
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0xf4, 0xd1]);
+            $response->insertString(Messages::PLAYER_BANNED);
+            $response->insertByte(0x00);
+        }
+
+        // TODO:
+        // - Set username.
+        $this->setUsername('test1234');
+        // - Set first set.
+        // - Set UID?
+        // - Set nickname.
+        $this->setNickname('test1234(e32)');
+        // - Set verified.
+
+        // TODO: Logon?
+        if (false) {
+            $response = new StringBuffer();
+            $response->insertArrayBytes([0x01, 0x00, 0xe3, 0xf3, 0xd1]);
+            $response->insertString('Logon?');
+            $response->insertByte(0x00);
+        }
+
+        $this->loginServer->addPlayer($this);
     }
 }
