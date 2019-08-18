@@ -73,7 +73,6 @@ class MiniLZO
         9,
     ];
 
-
     /**
      * @param  int  $v
      * @return mixed
@@ -81,6 +80,163 @@ class MiniLZO
     protected static function lzoBitOpsCtz32(int $v)
     {
         return self::multiplyDeBruijnPosition[(($v & -$v) * Cast::toUnsignedInt(hexdec(0x077cb531))) >> 27];
+    }
+
+    /**
+     * Compress data using the LZO algorithm.
+     *
+     * @param  array  $input
+     * @return array
+     */
+    public static function decompress1X(array $input): array
+    {
+        $t = 0;
+        $output = [];
+        $op = 0;
+        $ip = 0;
+        $gtFirstLateralRun = false;
+        $gtMatchDone = false;
+
+        if ($input[$ip] > 17) {
+            $t = Cast::toUnsignedByte($input[$ip++] - 17);
+            if ($t > 0) {
+                do {
+                    $output[$op++] = $input[$ip++];
+                } while (--$t > 0);
+            }
+
+            if ($t >= 0) {
+                $gtFirstLateralRun = true;
+            }
+        }
+
+        while (true) {
+            $mPos = 0;
+            if ($gtFirstLateralRun) {
+                $gtFirstLateralRun = false;
+                goto first_lateral_run;
+            }
+
+            $t = $input[$ip++];
+            if ($t > 16) {
+                goto match;
+            }
+            if ($t === 0) {
+                while($input[$ip] === 0) {
+                    $t += 255;
+                    $ip++;
+                }
+
+                $t += Cast::toUnsignedInt(15 + $input[$ip++]);
+            }
+
+            $t += 3;
+            if ($t > 0) {
+                do {
+                    $output[$op++] = $input[$ip++];
+                } while(--$t > 0);
+            }
+
+            first_lateral_run:
+            $t = $input[$ip++];
+            if ($t >= 16) {
+                goto match;
+            }
+            $mPos = $op - (1 + 2048);
+            $mPos -= $t >> 2;
+            $mPos -= Cast::toUnsignedInt($input[$ip++] << 2);
+
+            $output[$op++] = $output[$mPos++];
+            $output[$op++] = $output[$mPos++];
+            $output[$op++] = $output[$mPos];
+            $gtMatchDone = true;
+
+            match:
+            do {
+                if ($gtMatchDone) {
+                    $gtMatchDone = false;
+                    goto match_done;
+                }
+
+                if ($t >= 64) {
+                    $mPos = $op - 1;
+                    $mPos -= ($t >> 2) & 7;
+                    $mPos -= Cast::toUnsignedInt($input[$ip++] << 3);
+                    $t = ($t >> 5) - 1;
+                    $t += 2;
+
+                    do {
+                        $output[$op++] = $output[$mPos++];
+                    } while (--$t > 0);
+
+                    goto match_done;
+                }
+
+                if ($t >= 32) {
+                    $t &= 31;
+                    if ($t === 0) {
+                        while ($input[$ip] === 0) {
+                            $t += 255;
+                            $ip++;
+                        }
+
+                        $t = Cast::toUnsignedInt(31 + $input[$ip++]);
+                    }
+
+                    $mPos = $op - 1;
+                    $mPos -= Util::readUnsignedShort($input, $ip) >> 2;
+                    $ip += 2;
+                } elseif ($t >= 16) {
+                    $mPos = $op;
+                    $mPos -= ($t & 8) << 11;
+                    $t &= 7;
+                    if ($t === 0) {
+                        while ($input[$ip] === 0) {
+                            $t += 255;
+                            $ip++;
+                        }
+
+                        $t += Cast::toUnsignedInt(7 + $input[$ip++]);
+                    }
+
+                    $mPos -= Util::readUnsignedShort($input, $ip) >> 2;
+                    $ip += 2;
+                    if ($mPos === $op) {
+                        goto eof_found;
+                    }
+                    $mPos -= 16384;
+                } else {
+                    $mPos = $op - 1;
+                    $mPos -= $t >> 2;
+                    $mPos -= Cast::toUnsignedInt($input[$ip++] << 2);
+
+                    $output[$op++] = $output[$mPos++];
+                    $output[$op++] = $output[$mPos];
+
+                    goto match_done;
+                }
+
+                $t += 2;
+                do {
+                    $output[$op++] = $output[$mPos++];
+                } while(--$t > 0);
+
+                match_done:
+                $t = Cast::toUnsignedInt($input[$ip - 2] & 3);
+                if ($t === 0) {
+                    break;
+                }
+                if ($t >= 0) {
+                    do {
+                        $output[$op++] = $input[$ip++];
+                    } while(--$t > 0);
+                }
+                $t = $input[$ip++];
+            } while(true);
+        }
+
+        eof_found:
+        return $output;
     }
 
     /**

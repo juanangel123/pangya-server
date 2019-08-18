@@ -109,7 +109,7 @@ class LoginServer
         $this->crypt = new Lib();
         $this->authClient = new Client($this);
 
-        // $this->testEncryption();
+        //$this->testEncryption();
     }
 
     /**
@@ -121,7 +121,6 @@ class LoginServer
         $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
         $compressed = MiniLZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->size()));
 
-
         $buffer2 = new StringBuffer();
         $buffer2->insertArrayBytes($compressed);
         Util::showHex($buffer2);
@@ -130,6 +129,12 @@ class LoginServer
         $buffer3 = $this->crypt->encrypt($buffer, 0, 0);
         Util::showHex($buffer3);
         // 0 10 0 0 0 0 0 7 18 1 0 E4 50 D3 4D E3 59 D2 4D
+
+        $decompressed = MiniLZO::decompress1X($compressed);
+        $buffer4 = new StringBuffer();
+        $buffer4->insertArrayBytes($decompressed);
+        Util::showHex($buffer4);
+        // 1 0 E3 48 D2 4D 0
     }
 
     /**
