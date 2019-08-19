@@ -3,6 +3,7 @@
 namespace PangYa;
 
 use Exception;
+use PangYa\AuthClient;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -13,6 +14,11 @@ use React\Socket\ConnectionInterface;
 class LoginServer extends Server
 {
     /**
+     * @var AuthClient
+     */
+    protected $authClient;
+
+    /**
      * Init the server.
      */
     public function init(): void
@@ -20,6 +26,8 @@ class LoginServer extends Server
         $this->socket->on('connection', function (ConnectionInterface $connection) {
             $player = new Player($connection, $this);
             $player->connect();
+
+            $this->authClient = new AuthClient();
 
             echo 'Client connected: '.$connection->getRemoteAddress().' - ID: '.$player->getId()."\n";
 
@@ -42,19 +50,28 @@ class LoginServer extends Server
             });
         });
 
-        // This is not working since it is not doing both handling the connection and the input.
-        //try {
-        //    $loop->addReadStream(fopen('php://stdin', 'rb'), static function ($stream) {
-        //        $line = fgets($stream);
-        //        if (!$line) {
-        //            return;
-        //        }
-        //
-        //        echo 'Input: '.$line;
-        //    });
-        //} catch (Exception $e) {
-        //    echo "Can't get the stdin input stream\n";
-        //}
+//        $connector = new \React\Socket\Connector($this->loop);
+//        $promise = $connector->connect('127.0.0.1:10110')->then(function (\React\Socket\ConnectionInterface $connection) {
+//            $connection->on('data', function(string $data) {
+//               echo "Client data: " . $data . "\n";
+//            });
+//            $connection->pipe(new \React\Stream\WritableResourceStream(STDOUT, $loop));
+//            $connection->write("Hello World!\n");
+//        });
+
+//        This is not working since it is not doing both handling the connection and the input.
+//        try {
+//            $loop->addReadStream(fopen('php://stdin', 'rb'), static function ($stream) {
+//                $line = fgets($stream);
+//                if (!$line) {
+//                    return;
+//                }
+//
+//                echo 'Input: '.$line;
+//            });
+//        } catch (Exception $e) {
+//            echo "Can't get the stdin input stream\n";
+//        }
     }
 
     /**

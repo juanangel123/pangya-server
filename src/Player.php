@@ -154,7 +154,7 @@ class Player
      * @param  bool  $encrypt
      * @throws BufferException
      */
-    protected function send(Buffer $buffer, bool $encrypt = false): void
+    protected function send(Buffer $buffer, bool $encrypt = true): void
     {
         if (!$buffer->size()) {
             return;
@@ -179,7 +179,7 @@ class Player
         $buffer->insertInt($this->key << 24);
         $buffer->insertArrayBytes([0x75, 0x27, 0x00, 0x00]);
 
-        $this->send($buffer);
+        $this->send($buffer, false);
     }
 
     /**
@@ -211,9 +211,10 @@ class Player
      * Handle player login.
      *
      * @param  PangyaBuffer  $buffer
+     * @return bool
      * @throws BufferException
      */
-    public function handlePlayerLogin(PangyaBuffer $buffer): void
+    public function handlePlayerLogin(PangyaBuffer $buffer): bool
     {
         if ($this->loginServer->isUnderMaintenance()) {
             $response = new StringBuffer();
@@ -221,11 +222,11 @@ class Player
             $response->insertString(Messages::MAINTENANCE);
             $response->insertByte(0x00);
 
-            $this->send($response, true);
+            $this->send($response);
         }
 
         if ((!$user = $buffer->readString()) || (!$password = $buffer->readString())) {
-            return;
+            return false;
         }
 
         dump('user: '.$user);
@@ -236,8 +237,9 @@ class Player
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x4b, 0xd2]);
             $response->insertString(Messages::PLAYER_ALREADY_LOGGED);
             $response->insertByte(0x00);
+            $this->send($response);
 
-            $this->send($response, true);
+            return false;
         }
 
         // TODO: User not found.
@@ -246,6 +248,9 @@ class Player
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x6f, 0xd2]);
             $response->insertString(Messages::PLAYER_NOT_FOUND);
             $response->insertByte(0x00);
+            $this->send($response);
+
+            return false;
         }
 
         // TODO: Password error.
@@ -254,6 +259,9 @@ class Player
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x5b, 0xd2]);
             $response->insertString(Messages::PLAYER_PASSWORD_ERROR);
             $response->insertByte(0x00);
+            $this->send($response);
+
+            return false;
         }
 
         // TODO: Player banned.
@@ -262,6 +270,9 @@ class Player
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0xf4, 0xd1]);
             $response->insertString(Messages::PLAYER_BANNED);
             $response->insertByte(0x00);
+            $this->send($response);
+
+            return false;
         }
 
         // TODO:
@@ -279,8 +290,53 @@ class Player
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0xf3, 0xd1]);
             $response->insertString('Logon?');
             $response->insertByte(0x00);
+            $this->send($response);
+
+            return false;
         }
 
         $this->loginServer->addPlayer($this);
+
+        $connector = new \React\Socket\Connector($this->loginServer->getLoop());
+        $connector->connect('127.0.0.1:10110')->then(function (\React\Socket\ConnectionInterface $connection) {
+            $connection->on('data', function (string $data) {
+                echo "Client data: ".$data."\n";
+            });
+            $buffer = new StringBuffer();
+            $buffer->insertArrayBytes([0x03, 0x00]);
+            $buffer->insertInt($this->getId());
+
+            $connection->write($buffer->toString());
+        });
+
+        /*
+        if Self.FFirstSet = 0 then
+    begin
+      Reply.Clear;
+      Reply.WriteStr(#$0F#$00#$00);
+          Reply.WritePStr(Self.GetPlayerLogin);
+      Self.Send(Reply);
+
+      Reply.Clear;
+      Reply.WriteStr(#$01#$00#$D9#$FF#$FF#$FF#$FF);
+          Self.Send(Reply);
+      Exit;
+    end;
+*/
+
+        // TODO: If not first set.
+        if (true) {
+            $buffer2 = new StringBuffer();
+            $buffer2->insertArrayBytes([0x0f, 0x00, 0x00]);
+            $buffer2->insertInt(strlen('test1234'));
+            $buffer2->insertString('test1234');
+            $this->send($buffer2);
+
+            $buffer2 = new StringBuffer();
+            $buffer2->insertArrayBytes([0x01, 0x00, 0xd9, 0xff, 0xff, 0xff, 0xff]);
+            $this->send($buffer2);
+        }
+
+        return true;
     }
 }

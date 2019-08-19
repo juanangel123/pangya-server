@@ -1,14 +1,12 @@
 <?php
 
-namespace PangYa\Auth;
+namespace PangYa;
 
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
+use PangYa\Auth\PacketTypes;
 use PangYa\Player;
-use PangYa\Crypt\Lib;
-use PangYa\LoginServer;
-use PangYa\Packet\Buffer as PangYaBuffer;
-use PangYa\Server;
+use PangYa\Crypt\Lib;use PangYa\Packet\Buffer as PangYaBuffer;
 use PangYa\Util\Util;
 
 /**
@@ -16,14 +14,19 @@ use PangYa\Util\Util;
  *
  * @package PangYa
  */
-class AuthClient extends Server
+class AuthClient
 {
     /**
-     *
+     * @var
      */
-    public function init(): void
-    {
+    protected $crypt;
 
+    /**
+     * AuthClient constructor.
+     */
+    public function __construct()
+    {
+        $this->crypt = new Lib();
     }
 
     /**
@@ -54,7 +57,7 @@ class AuthClient extends Server
                 return;
             }
 
-            $this->parseDecryptedPacket($client, $this->getCrypt()->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
+            $this->parseDecryptedPacket($client, $this->crypt->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
         }
     }
 

@@ -4,8 +4,60 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be68a6d087bc972fcf0917d11bb5fe60",
+    "content-hash": "69b5fc178d723bb98a9bb294e7e551bb",
     "packages": [
+        {
+            "name": "clue/reactphp-flux",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/clue/reactphp-flux.git",
+                "reference": "b2b6a738f1c63aa47fc5bb14e1da8240013cbd13"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/clue/reactphp-flux/zipball/b2b6a738f1c63aa47fc5bb14e1da8240013cbd13",
+                "reference": "b2b6a738f1c63aa47fc5bb14e1da8240013cbd13",
+                "shasum": ""
+            },
+            "require": {
+                "react/promise": "^2.5 || ^1.2.1",
+                "react/stream": "^1.0 || ^0.7.7"
+            },
+            "require-dev": {
+                "clue/buzz-react": "^2.3",
+                "clue/ndjson-react": "^1.0",
+                "phpunit/phpunit": "^6.4 || ^5.7 || ^4.8.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Clue\\React\\Flux\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Christian Lück",
+                    "email": "christian@lueck.tv"
+                }
+            ],
+            "description": "Flux, the lightweight stream processor to concurrently do many (but not too many) things at once, built on top of ReactPHP.",
+            "homepage": "https://github.com/clue/reactphp-flux",
+            "keywords": [
+                "async",
+                "concurrency",
+                "flux",
+                "message queue",
+                "non-blocking",
+                "reactphp",
+                "streaming"
+            ],
+            "time": "2018-08-13T09:49:01+00:00"
+        },
         {
             "name": "evenement/evenement",
             "version": "v3.0.1",
