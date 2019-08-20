@@ -3,7 +3,12 @@
 namespace PangYa;
 
 use Exception;
-use PangYa\AuthClient;
+use Nelexa\Buffer\BufferException;
+use Nelexa\Buffer\StringBuffer;
+use PangYa\Auth\PacketTypes;
+use PangYa\Crypt\Lib;
+use PangYa\Packet\Buffer as PangYaBuffer;
+use PangYa\Util\Util;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -14,11 +19,6 @@ use React\Socket\ConnectionInterface;
 class LoginServer extends Server
 {
     /**
-     * @var AuthClient
-     */
-    protected $authClient;
-
-    /**
      * Init the server.
      */
     public function init(): void
@@ -27,12 +27,10 @@ class LoginServer extends Server
             $player = new Player($connection, $this);
             $player->connect();
 
-            $this->authClient = new AuthClient();
-
             echo 'Client connected: '.$connection->getRemoteAddress().' - ID: '.$player->getId()."\n";
 
             $connection->on('data', function (string $data) use ($player) {
-                $this->authClient->execute($player, $data);
+                $this->execute($player, $data);
             });
 
             $connection->on('end', static function () use ($player) {
@@ -49,29 +47,73 @@ class LoginServer extends Server
                 echo 'Client: '.$player->getId()." has disconnected\n";
             });
         });
+    }
 
-//        $connector = new \React\Socket\Connector($this->loop);
-//        $promise = $connector->connect('127.0.0.1:10110')->then(function (\React\Socket\ConnectionInterface $connection) {
-//            $connection->on('data', function(string $data) {
-//               echo "Client data: " . $data . "\n";
-//            });
-//            $connection->pipe(new \React\Stream\WritableResourceStream(STDOUT, $loop));
-//            $connection->write("Hello World!\n");
-//        });
+    /**
+     * Execute the command.
+     *
+     * @param  Player  $client
+     * @param  string  $command
+     * @throws BufferException
+     */
+    public function execute(Player $client, string $command): void
+    {
+        $buffer = new StringBuffer($command);
 
-//        This is not working since it is not doing both handling the connection and the input.
-//        try {
-//            $loop->addReadStream(fopen('php://stdin', 'rb'), static function ($stream) {
-//                $line = fgets($stream);
-//                if (!$line) {
-//                    return;
-//                }
-//
-//                echo 'Input: '.$line;
-//            });
-//        } catch (Exception $e) {
-//            echo "Can't get the stdin input stream\n";
-//        }
+        // Check packet size.
+        if ($buffer->size() < Lib::MIN_PACKET_SIZE) {
+            $client->disconnect();
+
+            return;
+        }
+
+        // Get real packet size.
+        $size = ($buffer->setPosition(1)->getUnsignedByte() + 4);
+        $buffer->rewind();
+
+        // Check and decompress all packets received.
+        while ($buffer->remaining() >= $size) {
+            if (!$client->securityCheck($buffer)) {
+                $client->disconnect();
+
+                return;
+            }
+
+            $this->parseDecryptedPacket($client,
+                $this->crypt->decrypt(new StringBuffer($buffer->getString($size)), $client->getKey()));
+        }
+    }
+
+    /**
+     * Parses a decrypted packet.
+     *
+     * @param  Player  $client
+     * @param  PangYaBuffer  $decrypted
+     * @throws BufferException
+     */
+    protected function parseDecryptedPacket(Player $client, PangYaBuffer $decrypted): void
+    {
+        $packetType = $decrypted->getUnsignedShort();
+        dump('packet type: '.$packetType);
+        switch ($packetType) {
+            case PacketTypes::HANDLE_PLAYER_LOGIN:
+                $client->handlePlayerLogin($decrypted);
+                break;
+            case PacketTypes::SEND_GAME_AUTH_KEY:
+                break;
+            case PacketTypes::HANDLE_DUPLICATE_LOGIN:
+                break;
+            case PacketTypes::CREATE_CHARACTER:
+                break;
+            case PacketTypes::NICKNAME_CHECK:
+                break;
+            case PacketTypes::REQUEST_CHARACTER_CREATE:
+                $client->createCharacter($decrypted);
+                break;
+            default:
+                echo "Unknown packet:\n";
+                Util::showHex($decrypted);
+        }
     }
 
     /**

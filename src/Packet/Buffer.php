@@ -2,6 +2,7 @@
 
 namespace PangYa\Packet;
 
+use Nelexa\Buffer\Buffer as BaseBuffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 
@@ -37,5 +38,45 @@ class Buffer extends StringBuffer
         } catch (BufferException $e) {
             return null;
         }
+    }
+
+    /**
+     * Insert string and his length.
+     *
+     * @param  string  $string
+     * @return self
+     * @throws BufferException
+     */
+    public function insertPString(string $string): self
+    {
+        $this->insertInt(strlen($string));
+        $this->insertString($string);
+
+        return $this;
+    }
+
+    /**
+     * Insert a fixed length string with overflow.
+     *
+     * @param  string  $string
+     * @param  int  $length
+     * @param  int  $overflow
+     * @return self
+     * @throws BufferException
+     */
+    public function insertString($string, int $length = 0, int $overflow = 0x00): self
+    {
+        parent::insertString($string);
+
+        if (($diff = $length - strlen($string)) > 0) {
+            $overflowData = [];
+            for ($i = 0; $i < $diff; $i++) {
+                $overflowData[] = $overflow;
+            }
+
+            $this->insertArrayBytes($overflowData);
+        }
+
+        return $this;
     }
 }

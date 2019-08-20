@@ -2,6 +2,7 @@
 
 namespace PangYa\Util;
 
+use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\Cast;
@@ -14,6 +15,11 @@ use Nelexa\Buffer\Cast;
 class Util
 {
     /**
+     * @var array
+     */
+    protected const CHARS_1 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+
+    /**
      * Show hex representation of a buffer.
      *
      * @param  Buffer  $buffer
@@ -21,7 +27,7 @@ class Util
      */
     public static function showHex(Buffer $buffer): void
     {
-        $oldPosition  = $buffer->position();
+        $oldPosition = $buffer->position();
 
         $buffer->rewind();
 
@@ -55,6 +61,23 @@ class Util
         for ($x = 0; $x < ($length - $outputIndex); $x++) {
             $output[$outputIndex + $x] = $input[$inputIndex + $x];
         }
+    }
+
+    /**
+     * Random auth.
+     *
+     * @param  int  $length
+     * @return string
+     * @throws Exception
+     */
+    public static function randomAuth(int $length): string
+    {
+        $result = '';
+        do {
+            $result.= self::CHARS_1[random_int(0, $length - 1)];
+        } while (strlen($result) < $length);
+
+        return $result;
     }
 
     /**
