@@ -60,14 +60,18 @@ class Player
     protected $verified;
 
     /**
+     * Auth key used for the login process.
+     *
      * @var string
      */
-    protected $auth1;
+    protected $authKeyLogin;
 
     /**
+     * Auth key used for the game.
+     *
      * @var string
      */
-    protected $auth2;
+    protected $authKeyGame;
 
     /**
      * ClientPlayer constructor.
@@ -167,12 +171,16 @@ class Player
      */
     protected function send(Buffer $buffer, bool $encrypt = true): void
     {
+        dump('send packet:');
+        dump($this->key);
+        Util::showHex($buffer);
+
         if (!$buffer->size()) {
             return;
         }
 
         if ($encrypt) {
-            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key, 0);
+            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key);
         }
 
         $this->connection->write($buffer->toString());
@@ -244,8 +252,8 @@ class Player
         dump('password: '.$password);
 
         // Set auth.
-        $this->auth1 = Util::randomAuth(7);
-        $this->auth2 = Util::randomAuth(7);
+        $this->authKeyLogin = Util::randomAuth(7);
+        $this->authKeyGame = Util::randomAuth(7);
 
         if ($this->loginServer->getPlayerById($this->id)) {
             $response = new StringBuffer();
@@ -313,7 +321,7 @@ class Player
         $this->loginServer->addPlayer($this);
 
         // TODO: If not first set.
-        if (true) {
+        if (false) {
             $response = new PangyaBuffer();
             $response->insertArrayBytes([0x0f, 0x00, 0x00]);
             $response->insertPString('test1234');
@@ -336,11 +344,14 @@ class Player
      */
     protected function sendLoggedOnData(): void
     {
+        dump('a');
         $buffer = new PangyaBuffer();
         $buffer->insertArrayBytes([0x10, 0x00]);
-        $buffer->insertPString($this->auth1);
+        $buffer->insertPString($this->authKeyLogin);
+        dump($this->authKeyLogin);
         $this->send($buffer);
 
+        dump('b');
         $buffer = new PangyaBuffer();
         $buffer->insertArrayBytes([0x01, 0x00, 0x00]);
         $buffer->insertPString($this->username);
@@ -349,8 +360,16 @@ class Player
         $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00]); // Level
         $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00]); // ??
         $buffer->insertPString($this->nickname);
-        $this->send($buffer);
+        //$this->send($buffer);
 
+        $test = new StringBuffer();
+        $test->insertArrayBytes([
+            0x01, 0x00, 0x00, 0x04, 0x00, 0x74, 0x65, 0x73, 0x74, 0xF2, 0x4F, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x00, 0x74, 0x65, 0x73, 0x74, 0x31, 0x32, 0x33, 0x34, 0x28, 0x65, 0x33, 0x32, 0x29,
+        ]);
+        $this->send($test);
+
+
+        dump('c');
         // Game servers.
         $buffer = new PangyaBuffer();
         $buffer->insertArrayBytes([0x02, 0x00]);
@@ -419,37 +438,46 @@ class Player
             $buffer->insertShort(1); // Img number.
         }
 
-        $this->send($buffer);
+        //$this->send($buffer);
 
+        $test = new StringBuffer();
+        $test->insertArrayBytes([
+            0x02, 0x00, 0x01, 0x54, 0x65, 0x73, 0x74, 0x20, 0x73, 0x65, 0x72, 0x76, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68, 0x29, 0x22, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x00, 0x38, 0x01, 0x00, 0x00, 0x31, 0x32, 0x37, 0x2E, 0x30, 0x2E, 0x30, 0x2E, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x29, 0xE8, 0x4E, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
+        ]);
+        $this->send($test);
+
+        dump('d');
         // Messenger servers.
-        $buffer = new PangyaBuffer();
-        $buffer->insertArrayBytes([0x09, 0x00]);
-        $buffer->insertByte(1); // Number of servers.
+//        $buffer = new PangyaBuffer();
+//        $buffer->insertArrayBytes([0x09, 0x00]);
+//        $buffer->insertByte(0); // Number of servers.
+//
+//        for ($i = 0; $i < 1; $i++) {
+//            $buffer->insertString('Test messenger server 1', 20);
+//            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+//            $buffer->insertInt(321388144); // Version?
+//            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+//            $buffer->insertInt(1); // Server ID.
+//            $buffer->insertInt(3000); // Max users.
+//            $buffer->insertInt(10); // Current users.
+//
+//            // Server address.
+//            $buffer->insertString('127.0.0.1', 16);
+//            $buffer->insertArrayBytes([0x68, 0xfe]);
+//            // Server port.
+//            $buffer->insertShort(20020);
+//
+//            $buffer->insertArrayBytes([0x00, 0x00, 0x00]);
+//            $buffer->insertInt(10); // App rate.
+//            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+//        }
+//
+//        $this->send($buffer);
 
-        for ($i = 0; $i < 1; $i++) {
-            $buffer->insertString('Test messenger server 1', 20);
-            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-            $buffer->insertInt(321388144); // Version?
-            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-            $buffer->insertInt(1); // Server ID.
-            $buffer->insertInt(3000); // Max users.
-            $buffer->insertInt(10); // Current users.
-
-            // Server address.
-            $buffer->insertString('127.0.0.1', 16);
-            $buffer->insertArrayBytes([0x68, 0xfe]);
-            // Server port.
-            $buffer->insertShort(20020);
-
-            $buffer->insertArrayBytes([0x00, 0x00, 0x00]);
-            $buffer->insertInt(10); // App rate.
-            $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-        }
-
-        $this->send($buffer);
-
+        dump('e');
         // Macros.
         $buffer = new PangyaBuffer();
+        $buffer->insertArrayBytes([0x06, 0x00]);
         $buffer->insertString('PangYa!', 64);
         $buffer->insertString('PangYa!', 64);
         $buffer->insertString('PangYa!', 64);

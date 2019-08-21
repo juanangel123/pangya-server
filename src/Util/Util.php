@@ -37,6 +37,9 @@ class Util
             if ($buffer->remaining() > 0) {
                 echo ' ';
             }
+            if ($buffer->position() > 0 && $buffer->position() % 25 === 0) {
+                echo "\n";
+            }
         }
 
         echo "\n";

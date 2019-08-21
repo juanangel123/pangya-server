@@ -33,7 +33,7 @@ class Lib
      * @return Buffer The encrypted packet data.
      * @throws BufferException
      */
-    public function encrypt(Buffer $buffer, int $key, int $salt): Buffer
+    public function encrypt(Buffer $buffer, int $key, int $salt = 0): Buffer
     {
         $compressed = MiniLZO::compress1X1($buffer->rewind()->getArrayBytes($buffer->size()));
         $buffer->rewind();
