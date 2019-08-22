@@ -54,7 +54,7 @@ class LoginServer extends Server
      *
      * @param  Player  $client
      * @param  string  $command
-     * @throws BufferException
+     * @throws Exception
      */
     public function execute(Player $client, string $command): void
     {
@@ -89,7 +89,7 @@ class LoginServer extends Server
      *
      * @param  Player  $client
      * @param  PangYaBuffer  $decrypted
-     * @throws BufferException
+     * @throws Exception
      */
     protected function parseDecryptedPacket(Player $client, PangYaBuffer $decrypted): void
     {
@@ -100,16 +100,24 @@ class LoginServer extends Server
                 $client->handlePlayerLogin($decrypted);
                 break;
             case PacketTypes::SEND_GAME_AUTH_KEY:
+                $client->sendGameAuthKey();
                 break;
             case PacketTypes::HANDLE_DUPLICATE_LOGIN:
+                // TODO
                 break;
             case PacketTypes::CREATE_CHARACTER:
+                // TODO
                 break;
             case PacketTypes::NICKNAME_CHECK:
+                // TODO
                 break;
             case PacketTypes::REQUEST_CHARACTER_CREATE:
                 $client->createCharacter($decrypted);
                 break;
+            case PacketTypes::GET_SERVER_LIST:
+                // TODO
+                dump('get server list - maybe');
+                Util::showHex($decrypted);
             default:
                 echo "Unknown packet:\n";
                 Util::showHex($decrypted);

@@ -75,11 +75,11 @@ class MiniLZO
 
     /**
      * @param  int  $v
-     * @return mixed
+     * @return int
      */
-    protected static function lzoBitOpsCtz32(int $v)
+    protected static function lzoBitOpsCtz32(int $v): int
     {
-        return self::multiplyDeBruijnPosition[(($v & -$v) * Cast::toUnsignedInt(hexdec(0x077cb531))) >> 27];
+        return self::multiplyDeBruijnPosition[Cast::toUnsignedInt(($v & -$v) * Cast::toUnsignedInt(0x077CB531)) >> 27];
     }
 
     /**
@@ -90,7 +90,6 @@ class MiniLZO
      */
     public static function decompress1X(array $input): array
     {
-        $t = 0;
         $output = [];
         $op = 0;
         $ip = 0;
@@ -105,13 +104,12 @@ class MiniLZO
                 } while (--$t > 0);
             }
 
-            if ($t >= 0) {
+            if ($t >= 4) {
                 $gtFirstLateralRun = true;
             }
         }
 
         while (true) {
-            $mPos = 0;
             if ($gtFirstLateralRun) {
                 $gtFirstLateralRun = false;
                 goto first_lateral_run;
@@ -122,7 +120,7 @@ class MiniLZO
                 goto match;
             }
             if ($t === 0) {
-                while($input[$ip] === 0) {
+                while ($input[$ip] === 0) {
                     $t += 255;
                     $ip++;
                 }
@@ -134,7 +132,7 @@ class MiniLZO
             if ($t > 0) {
                 do {
                     $output[$op++] = $input[$ip++];
-                } while(--$t > 0);
+                } while (--$t > 0);
             }
 
             first_lateral_run:
@@ -144,7 +142,7 @@ class MiniLZO
             }
             $mPos = $op - (1 + 2048);
             $mPos -= $t >> 2;
-            $mPos -= Cast::toUnsignedInt($input[$ip++] << 2);
+            $mPos -= Cast::toUnsignedInt($input[$ip++]) << 2;
 
             $output[$op++] = $output[$mPos++];
             $output[$op++] = $output[$mPos++];
@@ -161,7 +159,7 @@ class MiniLZO
                 if ($t >= 64) {
                     $mPos = $op - 1;
                     $mPos -= ($t >> 2) & 7;
-                    $mPos -= Cast::toUnsignedInt($input[$ip++] << 3);
+                    $mPos -= Cast::toUnsignedInt($input[$ip++]) << 3;
                     $t = ($t >> 5) - 1;
                     $t += 2;
 
@@ -208,7 +206,7 @@ class MiniLZO
                 } else {
                     $mPos = $op - 1;
                     $mPos -= $t >> 2;
-                    $mPos -= Cast::toUnsignedInt($input[$ip++] << 2);
+                    $mPos -= Cast::toUnsignedInt($input[$ip++]) << 2;
 
                     $output[$op++] = $output[$mPos++];
                     $output[$op++] = $output[$mPos];
@@ -219,7 +217,7 @@ class MiniLZO
                 $t += 2;
                 do {
                     $output[$op++] = $output[$mPos++];
-                } while(--$t > 0);
+                } while (--$t > 0);
 
                 match_done:
                 $t = Cast::toUnsignedInt($input[$ip - 2] & 3);
@@ -229,13 +227,14 @@ class MiniLZO
                 if ($t >= 0) {
                     do {
                         $output[$op++] = $input[$ip++];
-                    } while(--$t > 0);
+                    } while (--$t > 0);
                 }
                 $t = $input[$ip++];
-            } while(true);
+            } while (true);
         }
 
         eof_found:
+
         return $output;
     }
 
@@ -280,7 +279,7 @@ class MiniLZO
                 break;
             }
             $dv = Util::readUnsignedInt($input, $ip);
-            $dIndex = Cast::toUnsignedShort((((405029533 * $dv) >> (32 - 14)) & ((Cast::toUnsignedShort(1 << 14) - 1) >> 0)) << 0);
+            $dIndex = (((405029533 * $dv) >> (32 - 14)) & ((1 << 14) - 1) >> 0) << 0;
 
             $mPos = $inIndex + $dict[$dIndex];
             $dict[$dIndex] = Cast::toUnsignedShort($ip - $inIndex);
@@ -290,51 +289,47 @@ class MiniLZO
 
             $ii -= $ti;
             $ti = 0;
-            {
-                $t = $ip - $ii;
-                if ($t !== 0) {
-                    if ($t <= 3) {
-                        $output[$op - 2] |= Cast::toByte($t);
-                        Util::copyArray($input, $ii, $output, $op, $t);
-                        $op += $t;
-                    } elseif ($t <= 16) {
-                        $output[$op++] = Cast::toByte($t - 3);
-                        Util::copyArray($input, $ii, $output, $op, $t);
-                        $op += $t;
-                    } else {
-                        if ($t <= 18) {
-                            $output[$op++] = Cast::toByte($t - 3);
-                        } else {
-                            $tt = $t - 18;
-                            $output[$op++] = 0;
-                            while ($tt > 255) {
-                                $tt -= 255;
-                                $output[$op++] = 0;
-                            }
+            $t = $ip - $ii;
 
-                            $output[$op++] = Cast::toByte($tt);
+            if ($t !== 0) {
+                if ($t <= 3) {
+                    $output[$op - 2] |= Cast::toByte($t);
+                    Util::copyArray($input, $ii, $output, $op, $t);
+                    $op += $t;
+                } elseif ($t <= 16) {
+                    $output[$op++] = Cast::toByte($t - 3);
+                    Util::copyArray($input, $ii, $output, $op, $t);
+                    $op += $t;
+                } else {
+                    if ($t <= 18) {
+                        $output[$op++] = Cast::toByte($t - 3);
+                    } else {
+                        $tt = $t - 18;
+                        $output[$op++] = 0;
+                        while ($tt > 255) {
+                            $tt -= 255;
+                            $output[$op++] = 0;
                         }
 
-                        Util::copyArray($input, $ii, $output, $op, $t);
-                        $op += $t;
+                        $output[$op++] = Cast::toByte($tt);
                     }
+
+                    Util::copyArray($input, $ii, $output, $op, $t);
+                    $op += $t;
                 }
             }
 
             $mLen = 4;
 
-            {
+            $v = Util::readUnsignedInt($input, $ip + $mLen) ^ Util::readUnsignedInt($input, $mPos + $mLen);
+            while ($v === 0) {
+                $mLen += 4;
                 $v = Util::readUnsignedInt($input, $ip + $mLen) ^ Util::readUnsignedInt($input, $mPos + $mLen);
-                while ($v === 0) {
-                    $mLen += 4;
-                    $v = Util::readUnsignedInt($input, $ip + $mLen) ^ Util::readUnsignedInt($input, $mPos + $mLen);
-                    if ($ip + $mLen >= $ipEnd) {
-                        goto m_len_done;
-                    }
+                if ($ip + $mLen >= $ipEnd) {
+                    goto m_len_done;
                 }
-                $mLen += Cast::toUnsignedInt(self::lzoBitOpsCtz32($v) / 8);
             }
-
+            $mLen += Cast::toUnsignedInt(self::lzoBitOpsCtz32($v) / 8);
             m_len_done:
             $mOff = $ip - $mPos;
             $ip += $mLen;
@@ -384,6 +379,12 @@ class MiniLZO
 
         $outLen = $op - $outIndex;
 
+        for ($i = $outLen - 1; $i >= 0; --$i) {
+            $output[$i] = $output[$i] ?? 0;
+        }
+
+        ksort($output);
+
         return $inEnd - ($ii - $ti);
     }
 
@@ -406,7 +407,7 @@ class MiniLZO
             $ll = $l;
             $ll = $ll <= 49152 ? $ll : 49152;
             $llEnd = $ip + $ll;
-            if ($llEnd + (($t + $ll) >> 5) <= $llEnd || $llEnd + (($t + $ll) >> 5 <= $ip + $ll)) {
+            if ($llEnd + (($t + $ll) >> 5) <= $llEnd || ($llEnd + (($t + $ll) >> 5) <= $ip + $ll)) {
                 break;
             }
 
@@ -428,7 +429,7 @@ class MiniLZO
                 $output[$op++] = Cast::toByte($t - 3);
             } else {
                 $tt = $t - 18;
-                $output[$op++] = Cast::toByte($t - 3);
+                $output[$op++] = 0;
                 while ($tt > 255) {
                     $tt -= 255;
                     $output[$op++] = 0;

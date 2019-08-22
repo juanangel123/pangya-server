@@ -58,11 +58,13 @@ class Util
      * @param  array  $output
      * @param  int  $outputIndex
      * @param  int  $length
+     * @return void
      */
     public static function copyArray(array $input, int $inputIndex, array &$output, int $outputIndex, int $length): void
     {
-        for ($x = 0; $x < ($length - $outputIndex); $x++) {
-            $output[$outputIndex + $x] = $input[$inputIndex + $x];
+        $aux = array_slice($input, $inputIndex, $length);
+        for ($i = $outputIndex; $i < $outputIndex + $length; $i++) {
+            $output[$i] = $aux[$i - $outputIndex];
         }
     }
 
@@ -77,7 +79,7 @@ class Util
     {
         $result = '';
         do {
-            $result.= self::CHARS_1[random_int(0, $length - 1)];
+            $result .= self::CHARS_1[random_int(0, $length - 1)];
         } while (strlen($result) < $length);
 
         return $result;
