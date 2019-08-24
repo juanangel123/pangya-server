@@ -2,12 +2,11 @@
 
 namespace PangYa;
 
-use Nelexa\Buffer\BufferException;
+use Exception;
 use Nelexa\Buffer\StringBuffer;
+use PangYa\Client\AbstractClient;
+use PangYa\Client\SerialId;
 use PangYa\Crypt\Lib;
-use PangYa\Util\MiniLZO;
-use PangYa\Util\Util;
-use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Socket\Server as ReactServer;
 
@@ -24,16 +23,6 @@ abstract class Server
     protected $socket;
 
     /**
-     * @var LoopInterface
-     */
-    protected $loop;
-
-    /**
-     * @var Lib
-     */
-    protected $crypt;
-
-    /**
      * @var string
      */
     protected $host;
@@ -44,9 +33,21 @@ abstract class Server
     protected $port;
 
     /**
+     * TODO: implement a player pool.
+     *
      * @var Player[]
      */
     protected $players;
+
+    /**
+     * @var SerialId
+     */
+    protected $serialId;
+
+    /**
+     * @var Lib
+     */
+    protected $crypt;
 
     /**
      * @var bool
@@ -58,18 +59,26 @@ abstract class Server
      *
      * @param  string  $host
      * @param  string  $port
+     * @param  LoopInterface  $loop
      */
-    public function __construct(string $host, string $port)
+    public function __construct(string $host, string $port, LoopInterface $loop)
     {
-        $this->loop = Factory::create();
         $this->host = $host;
         $this->port = $port;
 
-        $this->socket = new ReactServer($this->host.':'.$this->port, $this->loop);
+        $this->socket = new ReactServer($this->host.':'.$this->port, $loop);
         $this->crypt = new Lib();
+        $this->serialId = new SerialId();
 
         $this->init();
     }
+
+    /**
+     * Return the name of the server for internal purposes.
+     *
+     * @return string
+     */
+    abstract public function getName(): string;
 
     /**
      * Init the server.
@@ -95,14 +104,6 @@ abstract class Server
     }
 
     /**
-     * @return LoopInterface
-     */
-    public function getLoop(): LoopInterface
-    {
-        return $this->loop;
-    }
-
-    /**
      * @return Lib
      */
     public function getCrypt(): Lib
@@ -111,10 +112,80 @@ abstract class Server
     }
 
     /**
+     * @return SerialId
+     */
+    public function getSerialId(): SerialId
+    {
+        return $this->serialId;
+    }
+
+    /**
      * @return bool
      */
     public function isUnderMaintenance(): bool
     {
         return $this->underMaintenance;
+    }
+
+    /**
+     * Execute the command.
+     *
+     * @param  AbstractClient  $client
+     * @param  string  $command
+     * @throws Exception
+     */
+    public function execute(AbstractClient $client, string $command): void
+    {
+        $buffer = new StringBuffer($command);
+
+        // Check packet size.
+        if ($buffer->size() < Lib::MIN_PACKET_SIZE) {
+            $client->disconnect();
+            return;
+        }
+
+        // Get real packet size.
+        $size = ($buffer->setPosition(1)->getUnsignedByte() + 4);
+        $buffer->rewind();
+
+        // Check and decompress all packets received.
+        while ($buffer->remaining() >= $size) {
+            if (!$client->securityCheck($buffer)) {
+                $client->disconnect();
+                return;
+            }
+
+            $client->parseDecryptedPacket($this->crypt->decrypt(new StringBuffer($buffer->getString($size)),
+                $client->getKey()));
+        }
+    }
+
+    // TODO: to player pool.
+
+    /**
+     * @param  Player  $player
+     */
+    public function addPlayer(Player $player): void
+    {
+        $this->players[$player->getId()] = $player;
+    }
+
+    /**
+     * @param  Player  $player
+     */
+    public function removePlayer(Player $player): void
+    {
+        if (isset($this->players[$player->getId()])) {
+            unset($this->players[$player->getId()]);
+        }
+    }
+
+    /**
+     * @param  int  $id
+     * @return Player|null
+     */
+    public function getPlayerById(int $id): ?Player
+    {
+        return $this->players[$id] ?? null;
     }
 }

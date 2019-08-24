@@ -9,12 +9,12 @@ namespace PangYa\Auth;
  */
 class PacketTypes
 {
-    public const HANDLE_PLAYER_LOGIN = 1;
-    public const SEND_GAME_AUTH_KEY = 3;
-    public const HANDLE_DUPLICATE_LOGIN = 4;
-    public const CREATE_CHARACTER = 6;
-    public const NICKNAME_CHECK = 7;
-    public const REQUEST_CHARACTER_CREATE = 8;
+    public const HANDLE_PLAYER_LOGIN = 0x01;
+    public const SEND_GAME_AUTH_KEY = 0x03;
+    public const HANDLE_DUPLICATE_LOGIN = 0x04;
+    public const CREATE_CHARACTER = 0x06;
+    public const NICKNAME_CHECK = 0x07;
+    public const REQUEST_CHARACTER_CREATE = 0x08;
     // TODO: this is triggered after a failed connection.
-    public const GET_SERVER_LIST = 11;
+    public const GET_SERVER_LIST = 0x0b;
 }

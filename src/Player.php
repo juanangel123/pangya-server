@@ -6,44 +6,19 @@ use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use PangYa\Crypt\Lib;
-use PangYa\Crypt\Tables;
-use PangYa\Packet\Buffer as PangyaBuffer;
+use PangYa\Auth\PacketTypes;
+use PangYa\Game\Client;
+use PangYa\Packet\Buffer as PangYaBuffer;
 use PangYa\Util\Util;
-use React\Socket\ConnectionInterface;
 
 /**
  * This class represents the player.
+ * TODO: change to auth client.
  *
  * @package PangYa
  */
-class Player
+class Player extends Client
 {
-    /**
-     * @var ConnectionInterface
-     */
-    protected $connection;
-
-    /**
-     * @var LoginServer
-     */
-    protected $loginServer;
-
-    /**
-     * @var int Id of the connection.
-     */
-    protected $id = 0;
-
-    /**
-     * The key related to the client.
-     * This key works to:
-     * - Authenticate the client.
-     * - Encrypt / decrypt data.
-     *
-     * @var int
-     */
-    protected $key;
-
     /**
      * @var string
      */
@@ -72,38 +47,6 @@ class Player
      * @var string
      */
     protected $authKeyGame;
-
-    /**
-     * ClientPlayer constructor.
-     *
-     * @param  ConnectionInterface  $connection
-     * @param  LoginServer  $loginServer
-     */
-    public function __construct(ConnectionInterface $connection, LoginServer $loginServer)
-    {
-        $this->connection = $connection;
-        $this->loginServer = $loginServer;
-    }
-
-    /**
-     * Return the client id.
-     *
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
-     * Return the key.
-     *
-     * @return int
-     */
-    public function getKey(): int
-    {
-        return $this->key;
-    }
 
     /**
      * @return string
@@ -138,51 +81,6 @@ class Player
     }
 
     /**
-     * Connect to the PangYa Server using the connection.
-     *
-     * @throws Exception
-     */
-    public function connect(): void
-    {
-        $this->key = random_int(0, 15); // Random hex.
-
-        // TODO: set a random connection id.
-        // Original: pool between 0 to 2999 taken from an array of connections (3000).
-        // $this->id = random_int(0, 2999);
-        $this->id = 0;
-
-        $this->sendKey();
-    }
-
-    /**
-     * Disconnect the client.
-     */
-    public function disconnect(): void
-    {
-        $this->connection->close();
-    }
-
-    /**
-     * Send buffer data through the connection.
-     *
-     * @param  Buffer  $buffer
-     * @param  bool  $encrypt
-     * @throws BufferException
-     */
-    protected function send(Buffer $buffer, bool $encrypt = true): void
-    {
-        if (!$buffer->size()) {
-            return;
-        }
-
-        if ($encrypt) {
-            $buffer = $this->loginServer->getCrypt()->encrypt($buffer, $this->key);
-        }
-
-        $this->connection->write($buffer->toString());
-    }
-
-    /**
      * Send the key to the server.
      *
      * @throws BufferException
@@ -198,40 +96,55 @@ class Player
     }
 
     /**
-     * Execute the security check for the data provided.
+     * Parse a decrypted packet.
      *
-     * @param  Buffer  $buffer
-     * @return bool
-     * @throws BufferException
+     * @param  PangYaBuffer  $decrypted
+     * @throws Exception
      */
-    public function securityCheck(Buffer $buffer): bool
+    public function parseDecryptedPacket(PangYaBuffer $decrypted): void
     {
-        $rand = $buffer->getUnsignedByte();
-
-        $x = Tables::SECURITY_CHECK_TABLE[($this->key << 8) + $rand];
-        $y = Tables::SECURITY_CHECK_TABLE[($this->key << 8) + $rand + 4096];
-
-        if ($y === ($x ^ $buffer->skip(3)->getUnsignedByte())) {
-            $buffer->skip(-Lib::MIN_PACKET_SIZE);
-
-            return true;
+        $packetType = $decrypted->getUnsignedShort();
+        dump('login server packet type: '.$packetType);
+        switch ($packetType) {
+            case PacketTypes::HANDLE_PLAYER_LOGIN:
+                $this->handlePlayerLogin($decrypted);
+                break;
+            case PacketTypes::SEND_GAME_AUTH_KEY:
+                $this->sendGameAuthKey();
+                break;
+            case PacketTypes::HANDLE_DUPLICATE_LOGIN:
+                dump('handle duplicate login');
+                break;
+            case PacketTypes::CREATE_CHARACTER:
+                dump('create character');
+                break;
+            case PacketTypes::NICKNAME_CHECK:
+                dump('nickname check');
+                break;
+            case PacketTypes::REQUEST_CHARACTER_CREATE:
+                $this->createCharacter($decrypted);
+                break;
+            case PacketTypes::GET_SERVER_LIST:
+                dump('get server list - maybe');
+                Util::showHex($decrypted);
+                break;
+            default:
+                echo "Unknown packet:\n";
+                Util::showHex($decrypted);
+                break;
         }
-
-        $buffer->skip(-Lib::MIN_PACKET_SIZE);
-
-        return false;
     }
 
     /**
      * Handle player login.
      *
-     * @param  PangyaBuffer  $buffer
+     * @param  PangYaBuffer  $buffer
      * @return bool
      * @throws Exception
      */
-    public function handlePlayerLogin(PangyaBuffer $buffer): bool
+    public function handlePlayerLogin(PangYaBuffer $buffer): bool
     {
-        if ($this->loginServer->isUnderMaintenance()) {
+        if ($this->server->isUnderMaintenance()) {
             $response = new StringBuffer();
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2]);
             $response->insertString(Messages::MAINTENANCE);
@@ -240,7 +153,7 @@ class Player
             $this->send($response);
         }
 
-        if ((!$user = $buffer->readString()) || (!$password = $buffer->readString())) {
+        if ((!$user = $buffer->readPString()) || (!$password = $buffer->readPString())) {
             return false;
         }
 
@@ -251,7 +164,7 @@ class Player
         $this->authKeyLogin = Util::randomAuth(7);
         $this->authKeyGame = Util::randomAuth(7);
 
-        if ($this->loginServer->getPlayerById($this->id)) {
+        if ($this->server->getPlayerById($this->id)) {
             $response = new StringBuffer();
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x4b, 0xd2]);
             $response->insertString(Messages::PLAYER_ALREADY_LOGGED);
@@ -314,11 +227,11 @@ class Player
             return false;
         }
 
-        $this->loginServer->addPlayer($this);
+        $this->server->addPlayer($this);
 
         // TODO: If not first set.
         if (false) {
-            $response = new PangyaBuffer();
+            $response = new PangYaBuffer();
             $response->insertArrayBytes([0x0f, 0x00, 0x00]);
             $response->insertPString('test1234');
             $this->send($response);
@@ -340,12 +253,12 @@ class Player
      */
     protected function sendLoggedOnData(): void
     {
-        $buffer = new PangyaBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x10, 0x00]);
         $buffer->insertPString($this->authKeyLogin);
         $this->send($buffer);
 
-        $buffer = new PangyaBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x01, 0x00, 0x00]);
         $buffer->insertPString($this->username);
         $buffer->insertInt($this->id);
@@ -357,7 +270,7 @@ class Player
         $this->send($buffer);
 
         // Game servers.
-        $buffer = new PangyaBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x02, 0x00]);
         $buffer->insertByte(1); // Number of servers.
 
@@ -412,13 +325,13 @@ class Player
             ]));
 
             // Server address.
-            $buffer->insertString('127.0.0.1', 16);
+            $buffer->insertString($_ENV['GAME_SERVER_HOST'], 16);
             $buffer->insertArrayBytes([0x60, 0x29]);
             // Server port.
-            $buffer->insertShort(20020);
+            $buffer->insertShort($_ENV['GAME_SERVER_PORT']);
 
             $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x08, 0x00, 0x00]);
-            $buffer->insertInt(1); // Angelic number.
+            $buffer->insertInt(0); // Angelic number.
             $buffer->insertShort(1); // Img event.
             $buffer->insertArrayBytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
             $buffer->insertShort(1); // Img number.
@@ -428,7 +341,7 @@ class Player
 
 
         // Messenger servers.
-        $buffer = new PangyaBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x09, 0x00]);
         $buffer->insertByte(1); // Number of servers.
 
@@ -442,10 +355,10 @@ class Player
             $buffer->insertInt(10); // Current users.
 
             // Server address.
-            $buffer->insertString('127.0.0.1', 16);
+            $buffer->insertString($_ENV['MESSENGER_SERVER_HOST'], 16);
             $buffer->insertArrayBytes([0x68, 0xfe]);
             // Server port.
-            $buffer->insertShort(20020);
+            $buffer->insertShort($_ENV['MESSENGER_SERVER_PORT']);
 
             $buffer->insertArrayBytes([0x00, 0x00, 0x00]);
             $buffer->insertInt(10); // App rate?.
@@ -455,7 +368,7 @@ class Player
         $this->send($buffer);
 
         // Macros.
-        $buffer = new PangyaBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x06, 0x00]);
         $buffer->insertString('PangYa!', 64);
         $buffer->insertString('PangYa!', 64);
@@ -496,7 +409,7 @@ class Player
      */
     public function sendGameAuthKey(): void
     {
-        $response = new PangyaBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x03, 0x00, 0x00, 0x00, 0x00, 0x00]);
         $response->insertPString($this->authKeyGame);
 

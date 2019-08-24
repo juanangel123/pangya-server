@@ -2,7 +2,6 @@
 
 namespace PangYa\Packet;
 
-use Nelexa\Buffer\Buffer as BaseBuffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 
@@ -31,7 +30,7 @@ class Buffer extends StringBuffer
      *
      * @return string|null
      */
-    public function readString(): ?string
+    public function readPString(): ?string
     {
         try {
             return implode(array_map('chr', $this->getArrayBytes($this->getUnsignedShort())));
@@ -49,7 +48,7 @@ class Buffer extends StringBuffer
      */
     public function insertPString(string $string): self
     {
-        $this->insertInt(strlen($string));
+        $this->insertShort(strlen($string));
         $this->insertString($string);
 
         return $this;

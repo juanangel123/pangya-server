@@ -8,7 +8,6 @@ use Nelexa\Buffer\Cast;
 use Nelexa\Buffer\StringBuffer;
 use PangYa\Packet\Buffer as PangYaBuffer;
 use PangYa\Util\MiniLZO;
-use PangYa\Util\Util;
 
 /**
  * Class used to encrypt and decrypt packets from the server-side.

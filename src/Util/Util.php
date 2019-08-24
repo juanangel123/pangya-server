@@ -23,28 +23,31 @@ class Util
      * Show hex representation of a buffer.
      *
      * @param  Buffer  $buffer
-     * @throws BufferException
      */
     public static function showHex(Buffer $buffer): void
     {
-        $oldPosition = $buffer->position();
+        try {
+            $oldPosition = $buffer->position();
 
-        $buffer->rewind();
+            $buffer->rewind();
 
-        while ($buffer->remaining() > 0) {
-            $byte = $buffer->getUnsignedByte();
-            echo '0x'.str_pad(dechex($byte), 2, '0', STR_PAD_LEFT);
-            if ($buffer->remaining() > 0) {
-                echo ' ';
+            while ($buffer->remaining() > 0) {
+                $byte = $buffer->getUnsignedByte();
+                echo '0x'.str_pad(dechex($byte), 2, '0', STR_PAD_LEFT);
+                if ($buffer->remaining() > 0) {
+                    echo ' ';
+                }
+                if ($buffer->position() > 0 && $buffer->position() % 25 === 0) {
+                    echo "\n";
+                }
             }
-            if ($buffer->position() > 0 && $buffer->position() % 25 === 0) {
-                echo "\n";
-            }
+
+            echo "\n";
+
+            $buffer->setPosition($oldPosition);
+        } catch (BufferException $e) {
+            //
         }
-
-        echo "\n";
-
-        $buffer->setPosition($oldPosition);
     }
 
     /**

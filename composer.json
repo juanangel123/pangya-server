@@ -1,6 +1,6 @@
 {
     "name": "juanangel123/pangya-server",
-    "description": "A PangYa Server built from the ground-up.",
+    "description": "A PangYa Server built from the ground-up, written in PHP.",
     "type": "project",
     "license": "MIT",
     "authors": [

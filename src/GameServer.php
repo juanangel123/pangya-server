@@ -3,14 +3,13 @@
 namespace PangYa;
 
 use Exception;
+use PangYa\Game\Client;
 use React\Socket\ConnectionInterface;
 
 /**
- * Class LoginServer
- *
- * @package PangYa
+ * Class GameServer
  */
-class LoginServer extends Server
+class GameServer extends Server
 {
     /**
      * Return the name of the server for internal purposes.
@@ -19,16 +18,18 @@ class LoginServer extends Server
      */
     public function getName(): string
     {
-        return 'Login Server';
+        return 'Game Server';
     }
 
     /**
      * Init the server.
+     *
+     * @return mixed
      */
     public function init(): void
     {
         $this->socket->on('connection', function (ConnectionInterface $connection) {
-            $client = new Player($connection, $this);
+            $client = new Client($connection, $this);
             $client->connect();
 
             echo $this->getName().' - Client connected: '.$connection->getRemoteAddress().' - ID: '.$client->getId()."\n";
@@ -37,18 +38,16 @@ class LoginServer extends Server
                 $this->execute($client, $data);
             });
 
-            $connection->on('end', function () use ($client) {
-                echo $this->getName().' - Client '.$client->getId()." has end the connection\n";
+            $connection->on('end', function () {
+                echo $this->getName()." - Client has end the connection\n";
             });
 
             $connection->on('error', function (Exception $e) {
                 echo $this->getName().' - Error: '.$e->getMessage()."\n";
             });
 
-            $connection->on('close', function () use ($client) {
-                $this->removePlayer($client);
-
-                echo $this->getName().' - Client '.$client->getId()." has disconnected\n";
+            $connection->on('close', function () {
+                echo $this->getName()." - Client has disconnected\n";
             });
         });
     }
