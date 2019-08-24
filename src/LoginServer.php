@@ -3,6 +3,7 @@
 namespace PangYa;
 
 use Exception;
+use PangYa\Auth\Client;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -28,7 +29,7 @@ class LoginServer extends Server
     public function init(): void
     {
         $this->socket->on('connection', function (ConnectionInterface $connection) {
-            $client = new Player($connection, $this);
+            $client = new Client($connection, $this);
             $client->connect();
 
             echo $this->getName().' - Client connected: '.$connection->getRemoteAddress().' - ID: '.$client->getId()."\n";

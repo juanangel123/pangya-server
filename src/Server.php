@@ -35,7 +35,7 @@ abstract class Server
     /**
      * TODO: implement a player pool.
      *
-     * @var Player[]
+     * @var AbstractClient[]
      */
     protected $players;
 
@@ -141,6 +141,7 @@ abstract class Server
         // Check packet size.
         if ($buffer->size() < Lib::MIN_PACKET_SIZE) {
             $client->disconnect();
+
             return;
         }
 
@@ -152,6 +153,7 @@ abstract class Server
         while ($buffer->remaining() >= $size) {
             if (!$client->securityCheck($buffer)) {
                 $client->disconnect();
+
                 return;
             }
 
@@ -163,29 +165,44 @@ abstract class Server
     // TODO: to player pool.
 
     /**
-     * @param  Player  $player
+     * @param  AbstractClient  $client
      */
-    public function addPlayer(Player $player): void
+    public function addPlayer(AbstractClient $client): void
     {
-        $this->players[$player->getId()] = $player;
+        $this->players[$client->getId()] = $client;
     }
 
     /**
-     * @param  Player  $player
+     * @param  AbstractClient  $client
      */
-    public function removePlayer(Player $player): void
+    public function removePlayer(AbstractClient $client): void
     {
-        if (isset($this->players[$player->getId()])) {
-            unset($this->players[$player->getId()]);
+        if (isset($this->players[$client->getId()])) {
+            unset($this->players[$client->getId()]);
         }
     }
 
     /**
      * @param  int  $id
-     * @return Player|null
+     * @return AbstractClient|null
      */
-    public function getPlayerById(int $id): ?Player
+    public function getPlayerById(int $id): ?AbstractClient
     {
         return $this->players[$id] ?? null;
+    }
+
+    /**
+     * @param  string  $username
+     * @return AbstractClient|null
+     */
+    public function getPlayerByUsername(string $username): ?AbstractClient
+    {
+        foreach ($this->players as $key => $player) {
+            if ($this->players[$key]->getUsername() === $username) {
+                return $this->players[$key];
+            }
+        }
+
+        return null;
     }
 }

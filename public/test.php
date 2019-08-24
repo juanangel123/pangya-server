@@ -3,13 +3,15 @@
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
 use PangYa\Crypt\Lib;
+use PangYa\Packet\Buffer;
 use PangYa\Util\MiniLZO;
 use PangYa\Util\Util;
 
-/**
- * Register the auto loader.
- */
+// Register the auto loader.
 require __DIR__.'/../vendor/autoload.php';
+
+// Set timezone.
+date_default_timezone_set('Europe/Madrid');
 
 /**
  * Test against server encryption / decryption and MiniLZO compression / decompression.

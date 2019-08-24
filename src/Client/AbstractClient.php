@@ -44,6 +44,25 @@ abstract class AbstractClient
     protected $key;
 
     /**
+     * Auth key used for the login process.
+     *
+     * @var string
+     */
+    protected $loginAuthKey;
+
+    /**
+     * Auth key used for the game.
+     *
+     * @var string
+     */
+    protected $gameAuthKey;
+
+    /**
+     * @var string
+     */
+    protected $username = '';
+
+    /**
      * Client constructor.
      *
      * @param  ConnectionInterface  $connection
@@ -97,6 +116,22 @@ abstract class AbstractClient
     }
 
     /**
+     * @return string
+     */
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    /**
+     * @param  string  $username
+     */
+    public function setUsername(string $username): void
+    {
+        $this->username = $username;
+    }
+
+    /**
      * Connect to the PangYa Server using the connection.
      *
      * @throws Exception
@@ -105,6 +140,8 @@ abstract class AbstractClient
     {
         $this->id = $this->server->getSerialId()->getId();
         $this->key = random_int(0, 15); // Random hex.
+
+        $this->server->addPlayer($this);
 
         $this->sendKey();
     }

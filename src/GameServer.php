@@ -12,6 +12,11 @@ use React\Socket\ConnectionInterface;
 class GameServer extends Server
 {
     /**
+     * @var string
+     */
+    public const VERSION= '852.00';
+
+    /**
      * Return the name of the server for internal purposes.
      *
      * @return string

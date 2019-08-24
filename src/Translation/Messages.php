@@ -1,6 +1,6 @@
 <?php
 
-namespace PangYa;
+namespace PangYa\Translation;
 
 /**
  * Class Messages

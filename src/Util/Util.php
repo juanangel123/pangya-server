@@ -2,10 +2,12 @@
 
 namespace PangYa\Util;
 
+use DateTime;
 use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\Cast;
+use PangYa\Packet\Buffer as PangYaBuffer;
 
 /**
  * Utility functions.
@@ -86,6 +88,39 @@ class Util
         } while (strlen($result) < $length);
 
         return $result;
+    }
+
+    /**
+     * Return the game time as a byte array.
+     *
+     * @return array
+     */
+    public static function getGameTime(): array
+    {
+        try {
+            $now = new DateTime();
+        } catch (Exception $e) {
+            return [];
+        }
+
+        try {
+            // Note: no leading zeros.
+            $result = new PangYaBuffer();
+            $result->insertShort($now->format('Y'));
+            $result->insertShort($now->format('m'));
+            $result->insertShort($now->format('w'));
+            $result->insertShort($now->format('d'));
+            $result->insertShort($now->format('G'));
+            $result->insertShort($now->format('i'));
+            $result->insertShort($now->format('s'));
+            $result->insertShort($now->format('v'));
+
+            $result->rewind();
+
+            return $result->getArrayBytes($result->size());
+        } catch (BufferException $e) {
+            return [];
+        }
     }
 
     /**

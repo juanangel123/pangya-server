@@ -1,29 +1,23 @@
 <?php
 
-namespace PangYa;
+namespace PangYa\Auth;
 
 use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
 use Nelexa\Buffer\StringBuffer;
-use PangYa\Auth\PacketTypes;
-use PangYa\Game\Client;
+use PangYa\Client\AbstractClient;
 use PangYa\Packet\Buffer as PangYaBuffer;
+use PangYa\Translation\Messages;
 use PangYa\Util\Util;
 
 /**
  * This class represents the player.
- * TODO: change to auth client.
  *
  * @package PangYa
  */
-class Player extends Client
+class Client extends AbstractClient
 {
-    /**
-     * @var string
-     */
-    protected $username;
-
     /**
      * @var string
      */
@@ -33,52 +27,6 @@ class Player extends Client
      * @var bool Flag to check if the client has been verified to send packets.
      */
     protected $verified;
-
-    /**
-     * Auth key used for the login process.
-     *
-     * @var string
-     */
-    protected $authKeyLogin;
-
-    /**
-     * Auth key used for the game.
-     *
-     * @var string
-     */
-    protected $authKeyGame;
-
-    /**
-     * @return string
-     */
-    public function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    /**
-     * @param  string  $username
-     */
-    public function setUsername(string $username): void
-    {
-        $this->username = $username;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNickname(): string
-    {
-        return $this->nickname;
-    }
-
-    /**
-     * @param  string  $nickname
-     */
-    public function setNickname(string $nickname): void
-    {
-        $this->nickname = $nickname;
-    }
 
     /**
      * Send the key to the server.
@@ -128,6 +76,8 @@ class Player extends Client
                 dump('get server list - maybe');
                 Util::showHex($decrypted);
                 break;
+            case 51:
+                break;
             default:
                 echo "Unknown packet:\n";
                 Util::showHex($decrypted);
@@ -153,18 +103,23 @@ class Player extends Client
             $this->send($response);
         }
 
-        if ((!$user = $buffer->readPString()) || (!$password = $buffer->readPString())) {
+        if ((!$username = $buffer->readPString()) || (!$password = $buffer->readPString())) {
             return false;
         }
 
-        dump('user: '.$user);
+        dump('user: '.$username);
         dump('password: '.$password);
 
         // Set auth.
-        $this->authKeyLogin = Util::randomAuth(7);
-        $this->authKeyGame = Util::randomAuth(7);
+        $this->loginAuthKey = Util::randomAuth(7);
+        $this->gameAuthKey = Util::randomAuth(7);
 
-        if ($this->server->getPlayerById($this->id)) {
+        dump('key: '.$this->key);
+        dump('id:'.$this->id);
+        dump('login auth key:'.$this->loginAuthKey);
+        dump('game auth key:'.$this->gameAuthKey);
+
+        if ($this->server->getPlayerByUsername($username)) {
             $response = new StringBuffer();
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0x4b, 0xd2]);
             $response->insertString(Messages::PLAYER_ALREADY_LOGGED);
@@ -196,7 +151,7 @@ class Player extends Client
             return false;
         }
 
-        // TODO: Player banned.
+        // TODO: Client banned.
         if (false) {
             $response = new StringBuffer();
             $response->insertArrayBytes([0x01, 0x00, 0xe3, 0xf4, 0xd1]);
@@ -209,12 +164,13 @@ class Player extends Client
 
         // TODO:
         // - Set username.
-        $this->setUsername('test1234');
+        $this->username = $username;
         // - Set first set.
         // - Set UID?
         // - Set nickname.
-        $this->setNickname('test1234(e32)');
+        $this->nickname = $username.'(e32)';
         // - Set verified.
+        $this->verified = true;
 
         // TODO: Logon?
         if (false) {
@@ -226,8 +182,6 @@ class Player extends Client
 
             return false;
         }
-
-        $this->server->addPlayer($this);
 
         // TODO: If not first set.
         if (false) {
@@ -255,7 +209,7 @@ class Player extends Client
     {
         $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x10, 0x00]);
-        $buffer->insertPString($this->authKeyLogin);
+        $buffer->insertPString($this->loginAuthKey);
         $this->send($buffer);
 
         $buffer = new PangYaBuffer();
@@ -385,7 +339,7 @@ class Player extends Client
     /**
      * Create a new character for the player.
      *
-     * @param Buffer $buffer
+     * @param  Buffer  $buffer
      * @throws BufferException
      */
     public function createCharacter(Buffer $buffer): void
@@ -411,7 +365,7 @@ class Player extends Client
     {
         $response = new PangYaBuffer();
         $response->insertArrayBytes([0x03, 0x00, 0x00, 0x00, 0x00, 0x00]);
-        $response->insertPString($this->authKeyGame);
+        $response->insertPString($this->gameAuthKey);
 
         $this->send($response);
     }
