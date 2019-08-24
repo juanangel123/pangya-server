@@ -142,7 +142,6 @@ class Client extends AbstractClient
     protected function sendPlayerInfo(): void
     {
         // Don't know why.
-
         $response = new StringBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd3, 0x00]);
         $this->send($response);
@@ -241,6 +240,17 @@ class Client extends AbstractClient
         $this->send($response);
 
         $this->sendStatistics();
+
+        // TODO: Card.
+
+        // TODO: Character data.
+        $this->sendCharacterData();
+
+        // TODO: Caddie data.
+        $this->sendCaddieData();
+
+        // TODO: Items.
+        $this->sendItems();
     }
 
     /**
@@ -316,6 +326,301 @@ class Client extends AbstractClient
         $response->insertString($this->getUsername().'(e32)', 22); // Guild leader nickname.
 
         $this->send($response);
+    }
+
+    /**
+     * @throws BufferException
+     */
+    protected function sendCharacterData(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x70, 0x00]);
+        // Character count.
+        // TODO: two times?
+        $response->insertShort(0);
+        $response->insertShort(0);
+
+        // TODO: character data.
+
+        $this->send($response);
+    }
+
+    /**
+     * @throws BufferException
+     */
+    protected function sendCaddieData(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x71, 0x00]);
+        // Caddie count.
+        // TODO: two times?
+        $response->insertShort(0);
+        $response->insertShort(0);
+
+        // TODO: caddie data.
+
+        $this->send($response);
+    }
+
+    /**
+     * @throws BufferException
+     */
+    protected function sendItems(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x73, 0x00]);
+        // Items count.
+        // TODO: two times?
+        $response->insertShort(1); // + 1
+        $response->insertShort(1);
+
+        // TODO: items data.
+
+        // Tiki.
+        $response->insertArrayBytes([
+            0xf4,
+            0xb4,
+            0x0d,
+            0x46,
+            0x42,
+            0x00,
+            0x00,
+            0x1a,
+            0x18,
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0xa4,
+            0x00,
+            0x17,
+            0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x20,
+            0xf0,
+            0xe1,
+            0x78,
+            0x59,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x80,
+            0x33,
+            0x7a,
+            0x59,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        ]);
+        $this->send($response);
+
+        // Mascots.
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0xe1, 0x00]);
+        $response->insertByte(0);
+
+        // TODO: mascots data.
+        $this->send($response);
+
+        // Toolbars.
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x72, 0x00]);
+        $response->insertInt(0); // Caddie.
+        $response->insertInt(0); // Character ID.
+        $response->insertInt(0); // Club ID.
+        $response->insertInt(0); // Ball ID.
+        $response->insertInt(0); // Item slot 1.
+        $response->insertInt(0); // Item slot 2.
+        $response->insertInt(0); // Item slot 3.
+        $response->insertInt(0); // Item slot 4.
+        $response->insertInt(0); // Item slot 5.
+        $response->insertInt(0); // Item slot 6.
+        $response->insertInt(0); // Item slot 7.
+        $response->insertInt(0); // Item slot 8.
+        $response->insertInt(0); // Item slot 9.
+        $response->insertInt(0); // Item slot 10.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Title IDX.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Unknown.
+        $response->insertInt(0); // Title Type ID.
+        $response->insertInt(0); // Mascot index.
+        $response->insertInt(0); // Poster left.
+        $response->insertInt(0); // Poster right.
+        $this->send($response);
+
+        // Item slot.
     }
 
     /**

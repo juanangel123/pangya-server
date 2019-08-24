@@ -72,12 +72,6 @@ class Client extends AbstractClient
             case PacketTypes::REQUEST_CHARACTER_CREATE:
                 $this->createCharacter($decrypted);
                 break;
-            case PacketTypes::GET_SERVER_LIST:
-                dump('get server list - maybe');
-                Util::showHex($decrypted);
-                break;
-            case 51:
-                break;
             default:
                 echo "Unknown packet:\n";
                 Util::showHex($decrypted);

@@ -15,6 +15,4 @@ class PacketTypes
     public const CREATE_CHARACTER = 0x06;
     public const NICKNAME_CHECK = 0x07;
     public const REQUEST_CHARACTER_CREATE = 0x08;
-    // TODO: this is triggered after a failed connection.
-    public const GET_SERVER_LIST = 0x0b;
 }
