@@ -162,7 +162,7 @@ class Client extends AbstractClient
         // - Set first set.
         // - Set UID?
         // - Set nickname.
-        $this->nickname = $username.'(e32)';
+        $this->nickname = $username.'1234';
         // - Set verified.
         $this->verified = true;
 
@@ -181,7 +181,7 @@ class Client extends AbstractClient
         if (false) {
             $response = new PangYaBuffer();
             $response->insertArrayBytes([0x0f, 0x00, 0x00]);
-            $response->insertPString('test1234');
+            $response->insertPString('test');
             $this->send($response);
 
             $response = new StringBuffer();

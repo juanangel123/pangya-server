@@ -63,7 +63,6 @@ class Util
      * @param  array  $output
      * @param  int  $outputIndex
      * @param  int  $length
-     * @return void
      */
     public static function copyArray(array $input, int $inputIndex, array &$output, int $outputIndex, int $length): void
     {

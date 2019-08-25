@@ -178,6 +178,7 @@ abstract class Server
     public function removePlayer(AbstractClient $client): void
     {
         if (isset($this->players[$client->getId()])) {
+            dump('remove player, '.$client->getId());
             unset($this->players[$client->getId()]);
         }
     }

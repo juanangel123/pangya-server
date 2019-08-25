@@ -30,7 +30,6 @@ $servers[] = new LoginServer($_ENV['LOGIN_SERVER_HOST'], $_ENV['LOGIN_SERVER_POR
 $servers[] = new GameServer($_ENV['GAME_SERVER_HOST'], $_ENV['GAME_SERVER_PORT'], $loop);
 $servers[] = new MessengerServer($_ENV['MESSENGER_SERVER_HOST'], $_ENV['MESSENGER_SERVER_PORT'], $loop);
 
-
 // https://github.com/spatie/phpunit-watcher/issues/82
 //$stdio = new Stdio($loginServer->getLoop());
 //

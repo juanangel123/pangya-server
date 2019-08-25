@@ -4,7 +4,6 @@ namespace PangYa\Game;
 
 use Exception;
 use Nelexa\Buffer\BufferException;
-use Nelexa\Buffer\StringBuffer;
 use PangYa\Client\AbstractClient;
 use PangYa\GameServer;
 use PangYa\Packet\Buffer as PangYaBuffer;
@@ -53,7 +52,7 @@ class Client extends AbstractClient
      */
     public function sendKey(): void
     {
-        $buffer = new StringBuffer();
+        $buffer = new PangYaBuffer();
         $buffer->insertArrayBytes([0x00, 0x06]);
         $buffer->insertArrayBytes([0x00, 0x00]);
         $buffer->insertArrayBytes([0x3f, 0x00, 0x01, 0x01]);
@@ -73,7 +72,7 @@ class Client extends AbstractClient
     public function parseDecryptedPacket(PangYaBuffer $decrypted): void
     {
         $packetType = $decrypted->getUnsignedShort();
-        dump('login server packet type: '.$packetType);
+        dump('game server packet type: '.$packetType);
         switch ($packetType) {
             case PacketTypes::PLAYER_LOGIN:
                 $this->handlePlayerLogin($decrypted);
@@ -142,51 +141,51 @@ class Client extends AbstractClient
     protected function sendPlayerInfo(): void
     {
         // Don't know why.
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd3, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x01, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x03, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x1c, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x1e, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x20, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x05, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x08, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x0b, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x0, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x12, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([
             0x1f,
             0x01,
@@ -207,35 +206,35 @@ class Client extends AbstractClient
         ]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x12, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x15, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x0e, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x14, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x16, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x18, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x1a, 0x00, 0x00, 0x00]);
         $this->send($response);
 
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x44, 0x00, 0xd2, 0x22, 0x00, 0x00, 0x00]);
         $this->send($response);
 
@@ -251,6 +250,62 @@ class Client extends AbstractClient
 
         // TODO: Items.
         $this->sendItems();
+
+        $this->sendLobbyLists();
+
+        // Junk.
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes(JunkData::PLAYER_INFO_1);
+        $this->send($response);
+
+        // Send achievement.
+        $this->sendAchievement();
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0xf1, 0x00, 0x00]);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x35, 0x00]);
+        $this->send($response);
+
+        // Cards.
+
+        $this->sendCards();
+
+        $this->sendCookie();
+
+        // Junk.
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes(JunkData::PLAYER_INFO_2);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes(JunkData::PLAYER_INFO_3);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0xb4, 0x00, 0x05, 0x00, 0x00]);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0xb4, 0x00, 0x00, 0x00, 0x00]);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes(JunkData::PLAYER_INFO_4);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x5d, 0x02, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes(JunkData::PLAYER_INFO_5);
+        $this->send($response);
+        // End junk.
+
+        $this->showMailPopup();
     }
 
     /**
@@ -264,7 +319,7 @@ class Client extends AbstractClient
         $response->insertArrayBytes([0xff, 0xff]);
         $response->insertString($this->username, 15);
         $response->insertString('', 7);
-        $response->insertString($this->username.'(e32)', 16); // Nickname.
+        $response->insertString($this->username.'1234', 16); // Nickname.
         $response->insertString('', 6);
         $response->insertString('Guild name', 21);
         $response->insertString('', 9); // Guild image.
@@ -323,7 +378,7 @@ class Client extends AbstractClient
         $response->insertString('Guild introducing', 101);
         $response->insertInt(1); // Guild position.
         $response->insertInt($this->id); // Guild leader uid.
-        $response->insertString($this->getUsername().'(e32)', 22); // Guild leader nickname.
+        $response->insertString($this->username.'1234', 22); // Guild leader nickname.
 
         $this->send($response);
     }
@@ -620,7 +675,89 @@ class Client extends AbstractClient
         $response->insertInt(0); // Poster right.
         $this->send($response);
 
-        // Item slot.
+        // TODO: Item slot.
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function sendLobbyLists(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x4d, 0x00]);
+        $response->insertByte(0); // Count.
+
+        // TODO: build lobbies.
+
+        $this->send($response);
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function sendAchievement(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x1d, 0x02]);
+        $response->insertInt(0);
+        // Achievement counter count (double).
+        $response->insertInt(0);
+        $response->insertInt(0);
+
+        // TODO: Achievement counters.
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x1e, 0x02]);
+        $response->insertInt(0);
+        // Achievement count (double).
+        $response->insertInt(0);
+        $response->insertInt(0);
+
+        // TODO: achievements.
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function sendCards(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x38, 0x01, 0x00, 0x00, 0x00, 0x00]);
+        $response->insertShort(0); // Count.
+
+        // TODO: Cards.
+
+        $this->send($response);
+
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x36, 0x01]);
+        $this->send($response);
+
+        // TODO: CARD SPCL NOT YET IMPLEMENTED
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function sendCookie(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x96, 0x00]);
+        $response->insertInt(1000); // Cookie amount.
+        $response->insertString('', 4);
+        $this->send($response);
+    }
+
+    /**
+     * @throws BufferException
+     */
+    public function showMailPopup(): void
+    {
+        $response = new PangYaBuffer();
+        $response->insertArrayBytes([0x10, 0x02, 0x00, 0x00, 0x00, 0x00]);
+        $response->insertInt(0); // Count.
+
+        // TODO: mail.
     }
 
     /**
@@ -628,7 +765,7 @@ class Client extends AbstractClient
      */
     protected function sendDisconnectResponse(): void
     {
-        $response = new StringBuffer();
+        $response = new PangYaBuffer();
         $response->insertArrayBytes([0x76, 0x02, 0x2d, 0x01, 0x00, 0x00]); // Code 300.
         $this->send($response);
         $this->disconnect();

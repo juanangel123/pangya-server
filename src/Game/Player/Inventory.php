@@ -9,5 +9,4 @@ namespace PangYa\Game\Player;
  */
 class Inventory
 {
-
 }
