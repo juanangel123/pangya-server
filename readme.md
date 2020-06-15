@@ -14,7 +14,6 @@ This is tested using Pangya_851_US version.
 ### Requirements
 
 * PHP 7.4
-* apache
 
 ### Steps to launch the server
 
@@ -30,7 +29,7 @@ Execute
 
     https://github.com/pangbox/rugburn
     
-2. Add to the registry (first time)
+2. Add to the registry
 
     `private/files/regproject.reg`
 
