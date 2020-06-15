@@ -106,7 +106,7 @@ class Client extends AbstractClient
         $code2 = $buffer->readPString();
 
         $client = $this->server->getPlayerById($id);
-        if (!$client) {
+        if ( ! $client) {
             $this->sendDisconnectResponse();
 
             return false;
@@ -270,9 +270,9 @@ class Client extends AbstractClient
         $this->send($response);
 
         // Cards.
-
         $this->sendCards();
 
+        // Cookie.
         $this->sendCookie();
 
         // Junk.
@@ -674,7 +674,6 @@ class Client extends AbstractClient
         $response->insertInt(0); // Poster left.
         $response->insertInt(0); // Poster right.
         $this->send($response);
-
         // TODO: Item slot.
     }
 
@@ -712,7 +711,6 @@ class Client extends AbstractClient
         // Achievement count (double).
         $response->insertInt(0);
         $response->insertInt(0);
-
         // TODO: achievements.
     }
 
@@ -732,7 +730,6 @@ class Client extends AbstractClient
         $response = new PangYaBuffer();
         $response->insertArrayBytes([0x36, 0x01]);
         $this->send($response);
-
         // TODO: CARD SPCL NOT YET IMPLEMENTED
     }
 

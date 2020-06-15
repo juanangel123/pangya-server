@@ -7,7 +7,10 @@ use Nelexa\Buffer\StringBuffer;
 use PangYa\Client\AbstractClient;
 use PangYa\Client\SerialId;
 use PangYa\Crypt\Lib;
+use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
+use React\Http\Response;
+use React\Http\Server as HttpServer;
 use React\Socket\Server as ReactServer;
 
 /**
@@ -21,6 +24,11 @@ abstract class Server
      * @var ReactServer
      */
     protected $socket;
+
+    /**
+     * @var HttpServer
+     */
+    protected $httpSocket;
 
     /**
      * @var string
@@ -52,7 +60,7 @@ abstract class Server
     /**
      * @var bool
      */
-    protected $underMaintenance = false;
+    protected $underMaintenance = true;
 
     /**
      * LoginServer constructor.
@@ -67,6 +75,17 @@ abstract class Server
         $this->port = $port;
 
         $this->socket = new ReactServer($this->host.':'.$this->port, $loop);
+        $this->httpSocket = new HttpServer(static function (ServerRequestInterface $request) {
+            return new Response(
+                200,
+                array(
+                    'Content-Type' => 'text/plain'
+                ),
+                file_get_contents(__DIR__ .'/../public/Translation/Read.aspx')
+            );
+        });
+        $this->httpSocket->listen($this->socket);
+
         $this->crypt = new Lib();
         $this->serialId = new SerialId();
 
@@ -136,6 +155,12 @@ abstract class Server
      */
     public function execute(AbstractClient $client, string $command): void
     {
+        // Check if incoming HTTP request.
+        if (str_starts_with($command, 'GET') ||
+            str_starts_with($command, 'POST')) {
+            return;
+        }
+
         $buffer = new StringBuffer($command);
 
         // Check packet size.
@@ -151,7 +176,7 @@ abstract class Server
 
         // Check and decompress all packets received.
         while ($buffer->remaining() >= $size) {
-            if (!$client->securityCheck($buffer)) {
+            if ( ! $client->securityCheck($buffer)) {
                 $client->disconnect();
 
                 return;
@@ -178,7 +203,6 @@ abstract class Server
     public function removePlayer(AbstractClient $client): void
     {
         if (isset($this->players[$client->getId()])) {
-            dump('remove player, '.$client->getId());
             unset($this->players[$client->getId()]);
         }
     }

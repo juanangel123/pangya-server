@@ -1,0 +1,12 @@
+{
+  "UrlRewrites": {
+    "http://[^/]+/(.+)": "http://localhost:8080/$0",
+    "PortRewrites": [
+      {
+        "FromPort": "10103",
+        "ToPort": "10101",
+        "ToAddr": "localhost"
+      }
+    ]
+  }
+}

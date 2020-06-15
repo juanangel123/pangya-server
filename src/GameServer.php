@@ -14,7 +14,7 @@ class GameServer extends Server
     /**
      * @var string
      */
-    public const VERSION= '852.00';
+    public const VERSION = '852.00';
 
     /**
      * Return the name of the server for internal purposes.

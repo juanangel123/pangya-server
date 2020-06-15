@@ -25,8 +25,7 @@ function testEncryption(): void
     $buffer = new StringBuffer();
     $buffer->insertArrayBytes([0xd6, 0x12, 0x00, 0x7d, 0x00, 0x00, 0x00, 0x35, 0x1a, 0x01, 0x00, 0xd1, 0xe5, 0xfe, 0xff, 0x27, 0xff, 0xff, 0xee, 0xff, 0x00]);
 
-    $crypt->decrypt($buffer);
-    die();
+    $crypt->decrypt($buffer, 0);
 
     $buffer = new StringBuffer();
     $buffer->insertArrayBytes([0x01, 0x00, 0xe3, 0x48, 0xd2, 0x4d, 0x00]);
@@ -122,7 +121,7 @@ function testEncryption(): void
     Util::showHex($result);
     // 01 00 04 00 74 65 73 74 20 00 30 39 38 46 36 42 43 44 34 36 32 31 44 33 37 33 43 41 44 45 34 45 38 33 32 36 32 37 42 34 46 36 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-    $buffer5 = new \PangYa\Packet\Buffer();
+    $buffer5 = new Buffer();
     $buffer5->insertArrayBytes( [
         0x02,
         0x00,
@@ -225,7 +224,10 @@ function testEncryption(): void
 
     Util::showHex($result);
     // 0 54 0 0 0 0 0 5F B 2 0 5E 5F 67 73 75 74 16 16 6 56 16 65 5D 76 65 1 47 29 22 12 98 2B 22 10 F1 2 0 3 B1 4 0 0 88 5 0 0 9 33 37 2E 1 1C 7 0 1 FE 33 2E 37 B0 2A E8 48 60 29 E8 46 0 0 1 8 0 0 0 0 0 0 1 0 0 0 1 0 11 0 1
-    die();
 }
 
-testEncryption();
+try {
+    testEncryption();
+} catch (BufferException $e) {
+    echo $e->getMessage();
+}

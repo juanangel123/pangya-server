@@ -8,7 +8,11 @@ use PangYa\GameServer;
 use PangYa\LoginServer;
 use PangYa\MessengerServer;
 use PangYa\Server;
+use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory;
+use React\Http\Response;
+use React\Http\Server as HttpServer;
+use React\Socket\Server as ReactServer;
 use Symfony\Component\Dotenv\Dotenv;
 
 // Register the auto loader.
@@ -30,6 +34,39 @@ $servers[] = new LoginServer($_ENV['LOGIN_SERVER_HOST'], $_ENV['LOGIN_SERVER_POR
 $servers[] = new GameServer($_ENV['GAME_SERVER_HOST'], $_ENV['GAME_SERVER_PORT'], $loop);
 $servers[] = new MessengerServer($_ENV['MESSENGER_SERVER_HOST'], $_ENV['MESSENGER_SERVER_PORT'], $loop);
 
+echo "PangYa Fresh UP! Server\n";
+foreach ($servers as $server) {
+    echo $server->getName().' running at http://'.$server->getHost().':'.$server->getPort()."\n";
+}
+
+// TODO
+$socket = new ReactServer('127.0.0.1:50009', $loop);
+$httpSocket = new HttpServer(static function (ServerRequestInterface $request) {
+    return new Response(
+        200,
+        array(
+            'Content-Type' => 'text/plain'
+        ),
+        file_get_contents(__DIR__.'/../public/Translation/Read.aspx'),
+    );
+});
+$httpSocket->listen($socket);
+
+$socket = new ReactServer('127.0.0.1:8080', $loop);
+$httpSocket = new HttpServer(static function (ServerRequestInterface $request) {
+    return new Response(
+        200,
+        array(
+            'Content-Type' => 'text/plain'
+        ),
+        file_get_contents(__DIR__.'/../public/updatelist'),
+    );
+});
+$httpSocket->listen($socket);
+
+// Run the loop.
+$loop->run();
+
 // https://github.com/spatie/phpunit-watcher/issues/82
 //$stdio = new Stdio($loginServer->getLoop());
 //
@@ -43,10 +80,3 @@ $servers[] = new MessengerServer($_ENV['MESSENGER_SERVER_HOST'], $_ENV['MESSENGE
 //        $stdio->end();
 //    }
 //});
-
-echo "PangYa Fresh UP! Server\n";
-foreach ($servers as $server) {
-    echo $server->getName().' running at http://'.$server->getHost().':'.$server->getPort()."\n";
-}
-
-$loop->run();

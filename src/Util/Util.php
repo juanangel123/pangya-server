@@ -44,12 +44,12 @@ class Util
                 }
             }
 
-            echo "\n";
-
             $buffer->setPosition($oldPosition);
         } catch (BufferException $e) {
             //
         }
+
+        echo "\n\n";
     }
 
     /**

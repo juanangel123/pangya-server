@@ -5,6 +5,7 @@ namespace PangYa\Client;
 use Exception;
 use Nelexa\Buffer\Buffer;
 use Nelexa\Buffer\BufferException;
+use Nelexa\Buffer\StringBuffer;
 use PangYa\Crypt\Lib;
 use PangYa\Crypt\Tables;
 use PangYa\Packet\Buffer as PangYaBuffer;
@@ -152,6 +153,17 @@ abstract class AbstractClient
     public function disconnect(): void
     {
         $this->connection->close();
+    }
+
+    /**
+     * Send raw data to the connection.
+     *
+     * @param  string  $data
+     * @throws BufferException
+     */
+    public function sendRawData(string $data): void
+    {
+        $this->connection->write(new StringBuffer($data));
     }
 
     /**
